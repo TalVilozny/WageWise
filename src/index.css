@@ -1,0 +1,119 @@
+/* Dark theme (default) */
+:root {
+  color-scheme: dark;
+  --text-body: #ffffff;
+  --text-strong: #ffffff;
+  --color-background: #0a0606;
+  --color-primary: #a54a4d;
+  --color-secondary: #672325;
+  --color-accent: #8e2528;
+  --color-deep: #672325;
+
+  --rgb-primary: 165, 74, 77;
+  --rgb-accent: 142, 37, 40;
+  --rgb-deep: 103, 35, 37;
+
+  --color-bg-base: #0a0606;
+  --color-bg-mid: #140909;
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.78);
+  --color-text-soft: rgba(255, 255, 255, 0.9);
+  --color-border: rgba(255, 255, 255, 0.14);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-surface: rgba(15, 23, 42, 0.45);
+  --color-surface-glass: rgba(255, 255, 255, 0.04);
+  --color-input-bg: rgba(15, 23, 42, 0.65);
+  --color-btn-text: #ffffff;
+
+  --mesh-1: rgba(var(--rgb-primary), 0.22);
+  --mesh-2: rgba(var(--rgb-accent), 0.18);
+  --mesh-3: rgba(var(--rgb-deep), 0.18);
+  --glow-1: #8e2528;
+  --glow-2: #a54a4d;
+  --dots-color: rgba(255, 255, 255, 0.1);
+  --dots-opacity: 0.45;
+  --intro-shell-bg: #0a0606;
+
+  --shadow-logo: rgba(var(--rgb-accent), 0.55);
+  --icon-stroke: rgba(255, 255, 255, 0.35);
+  --icon-inner: rgba(15, 23, 42, 0.35);
+  --chip-selected-bg: rgba(var(--rgb-deep), 0.38);
+  --chip-selected-text: #ffffff;
+  --story-done-bg: rgba(var(--rgb-deep), 0.22);
+  --story-done-border: rgba(var(--rgb-accent), 0.55);
+  --story-done-label: rgba(255, 255, 255, 0.92);
+
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--text-body);
+  background: var(--color-background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light theme — warm linen / terracotta (reference) */
+html[data-theme='light'] {
+  color-scheme: light;
+  --text-body: #000000;
+  --text-strong: #000000;
+  --color-background: #f3eeed;
+  --color-primary: #b56566;
+  --color-secondary: #e8d5d5;
+  --color-accent: #c96d70;
+  --color-deep: #9a4d4f;
+
+  --rgb-primary: 181, 101, 102;
+  --rgb-accent: 201, 109, 112;
+  --rgb-deep: 154, 77, 79;
+
+  --color-bg-base: #f3eeed;
+  --color-bg-mid: #ebe4e3;
+  --color-text: #000000;
+  --color-text-muted: rgba(0, 0, 0, 0.62);
+  --color-text-soft: rgba(0, 0, 0, 0.85);
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-strong: rgba(0, 0, 0, 0.14);
+  --color-surface: rgba(255, 255, 255, 0.92);
+  --color-surface-glass: rgba(255, 255, 255, 0.72);
+  --color-input-bg: rgba(255, 255, 255, 0.95);
+  --color-btn-text: #ffffff;
+
+  --mesh-1: rgba(var(--rgb-primary), 0.18);
+  --mesh-2: rgba(var(--rgb-accent), 0.14);
+  --mesh-3: rgba(232, 213, 213, 0.65);
+  --glow-1: #e8d5d5;
+  --glow-2: #c96d70;
+  --dots-color: rgba(0, 0, 0, 0.07);
+  --dots-opacity: 0.55;
+  --intro-shell-bg: #f3eeed;
+
+  --shadow-logo: rgba(var(--rgb-primary), 0.35);
+  --icon-stroke: rgba(0, 0, 0, 0.18);
+  --icon-inner: rgba(0, 0, 0, 0.22);
+  --chip-selected-bg: var(--color-secondary);
+  --chip-selected-text: var(--color-text);
+  --story-done-bg: rgba(var(--rgb-primary), 0.12);
+  --story-done-border: rgba(var(--rgb-primary), 0.45);
+  --story-done-label: var(--color-text);
+}
+
+#root {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  min-height: 100svh;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Montserrat', 'Nunito', system-ui, sans-serif;
+}
