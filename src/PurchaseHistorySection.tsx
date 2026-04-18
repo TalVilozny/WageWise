@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { CurrencyCode, PurchaseHistoryEntry } from "./purchaseHistory";
 import {
   REGRET_GRAPH_MIN_ANSWERS,
@@ -12,6 +12,23 @@ type Props = {
   formatHours: (h: number) => string;
   onRegretAnswer: (id: string, worthIt: boolean) => void;
 };
+
+function IconPen({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
 
 function formatMonthLifeHours(h: number): string {
   if (h <= 0) return "0";
@@ -31,6 +48,20 @@ function formatDecidedAt(ts: number): string {
   } catch {
     return new Date(ts).toLocaleString();
   }
+}
+
+const MS_DAY = 24 * 60 * 60 * 1000;
+
+/** Copy for Yes verdicts still inside the follow-up waiting window. */
+function worthItFollowUpCountdown(decidedAt: number, now: number): string | null {
+  const msLeft = decidedAt + REGRET_PROMPT_AFTER_MS - now;
+  if (msLeft <= 0) return null;
+  if (msLeft < MS_DAY) {
+    return "In less than a day, we will ask you if the purchase was worth it.";
+  }
+  const days = Math.ceil(msLeft / MS_DAY);
+  const dayWord = days === 1 ? "day" : "days";
+  return `In ${days} ${dayWord}, we will ask you if the purchase was worth it.`;
 }
 
 function regretCounts(entries: PurchaseHistoryEntry[]) {
@@ -104,6 +135,8 @@ export function PurchaseHistorySection({
   formatHours,
   onRegretAnswer,
 }: Props) {
+  const [regretEditId, setRegretEditId] = useState<string | null>(null);
+
   const monthHours = useMemo(
     () => sumHoursCostThisMonth(entries),
     [entries],
@@ -138,7 +171,12 @@ export function PurchaseHistorySection({
             <ol className="history-timeline">
               {sorted.map((e) => {
                 const showRegretPrompt =
+                  e.verdictYes &&
                   now - e.decidedAt >= REGRET_PROMPT_AFTER_MS;
+                const worthItTease =
+                  e.verdictYes && e.worthIt === null
+                    ? worthItFollowUpCountdown(e.decidedAt, now)
+                    : null;
                 return (
                   <li key={e.id} className="history-item">
                     <span className="history-dot" aria-hidden />
@@ -179,15 +217,72 @@ export function PurchaseHistorySection({
                                   Not really
                                 </button>
                               </div>
+                            ) : regretEditId === e.id ? (
+                              <div className="history-regret-edit">
+                                <p
+                                  className="history-regret-q"
+                                  id={`regret-edit-${e.id}`}
+                                >
+                                  Update your answer
+                                </p>
+                                <div
+                                  className="history-regret-actions"
+                                  role="group"
+                                  aria-labelledby={`regret-edit-${e.id}`}
+                                >
+                                  <button
+                                    type="button"
+                                    className="btn-regret btn-regret--yes"
+                                    onClick={() => {
+                                      onRegretAnswer(e.id, true);
+                                      setRegretEditId(null);
+                                    }}
+                                  >
+                                    Worth it
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-regret btn-regret--no"
+                                    onClick={() => {
+                                      onRegretAnswer(e.id, false);
+                                      setRegretEditId(null);
+                                    }}
+                                  >
+                                    Not really
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="history-regret-edit-cancel"
+                                  onClick={() => setRegretEditId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             ) : (
-                              <p
-                                className={`history-regret-answered history-regret-answered--${e.worthIt ? "yes" : "no"}`}
-                              >
-                                You said:{" "}
-                                <strong>
-                                  {e.worthIt ? "Worth it" : "Regret"}
-                                </strong>
-                              </p>
+                              <div className="history-regret-answered-row">
+                                <p
+                                  className={`history-regret-answered history-regret-answered--${e.worthIt ? "yes" : "no"}`}
+                                >
+                                  You said:{" "}
+                                  <strong>
+                                    {e.worthIt ? "Worth it" : "Regret"}
+                                  </strong>
+                                </p>
+                                <button
+                                  type="button"
+                                  className="history-regret-edit-btn"
+                                  aria-label="Edit worth-it answer"
+                                  title="Edit answer"
+                                  onClick={() =>
+                                    setRegretEditId((cur) =>
+                                      cur === e.id ? null : e.id,
+                                    )
+                                  }
+                                >
+                                  <IconPen className="history-regret-edit-icon" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         )}
@@ -219,6 +314,9 @@ export function PurchaseHistorySection({
                           </dd>
                         </div>
                       </dl>
+                      {worthItTease != null && (
+                        <p className="history-worth-it-tease">{worthItTease}</p>
+                      )}
                     </div>
                   </li>
                 );

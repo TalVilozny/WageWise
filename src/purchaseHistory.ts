@@ -4,7 +4,7 @@ const STORAGE_KEY = "doibuy-purchase-history";
 const MAX_ENTRIES = 200;
 
 /** Prompt “Was it worth it?” only after this delay from the decision (a few days). */
-export const REGRET_PROMPT_AFTER_MS = 60 * 1000;
+export const REGRET_PROMPT_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 
 /** Show the regret vs worth-it graph once this many purchases have a follow-up answer. */
 export const REGRET_GRAPH_MIN_ANSWERS = 3;

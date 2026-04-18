@@ -806,6 +806,7 @@ export function VerdictReveal({
 
       <motion.div
         className={`verdict verdict-reveal-details ${canBuy ? "verdict-yes" : "verdict-no"}`}
+        data-verdict={canBuy ? "yes" : "no"}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
