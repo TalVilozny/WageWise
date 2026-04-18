@@ -1,73 +1,113 @@
-# React + TypeScript + Vite
+# 💸 WageWise
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Make smarter purchases by thinking in **hours, not money**
 
-Currently, two official plugins are available:
+<p align="center">
+  <a href="https://usewagewise.vercel.app">
+    <img src="https://img.shields.io/badge/demo-live-brightgreen" />
+  </a>
+  <a href="https://github.com/TalVilozny/wagewise/stargazers">
+    <img src="https://img.shields.io/github/stars/TalVilozny/wagewise?style=social" />
+  </a>
+  <a href="https://github.com/TalVilozny/wagewise/network">
+    <img src="https://img.shields.io/github/forks/TalVilozny/wagewise?style=social" />
+  </a>
+  <a href="https://github.com/TalVilozny/wagewise/issues">
+    <img src="https://img.shields.io/github/issues/TalVilozny/wagewise" />
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green" />
+  </a>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 📸 Preview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+<p align="center">
+  <img src="./public/WageWiseThumbnail.png" alt="WageWise Preview" width="800"/>
+</p>
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ✨ Overview
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+WageWise is a simple yet powerful web app that helps you make better financial decisions by converting prices into **hours of your life**.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Instead of asking:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+> “Can I afford this?”
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+WageWise reframes the question to:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+> **“Is this worth the time I need to work for it?”**
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## 🧠 How It Works
+
+| Step | Action                            |
+| ---- | --------------------------------- |
+| 1️⃣   | Enter your hourly wage            |
+| 2️⃣   | Enter the price of an item        |
+| 3️⃣   | Define your personal “price line” |
+| 4️⃣   | Get an instant verdict            |
+
+---
+
+## 🎯 Why WageWise?
+
+Money is abstract — time is not.
+
+- 💡 Understand the real cost of purchases
+- 🛑 Reduce impulse spending
+- 🎯 Align spending with your priorities
+- 🧭 Make intentional decisions
+
+---
+
+## 📊 Features
+
+- ⏱️ Convert price → hours instantly
+- 🎯 Personalized “worth it” threshold
+- ⚡ Fast, minimal UX
+- 📱 Fully responsive design
+
+---
+
+## 🚀 Tech Stack
+
+| Category   | Tech            |
+| ---------- | --------------- |
+| Frontend   | React / Next.js |
+| Language   | TypeScript      |
+| Styling    | Tailwind CSS    |
+| Deployment | Vercel          |
+
+---
+
+<details> <summary><strong>🤝 Contributing</strong></summary> <br>
+
+Contributions, ideas, and feedback are welcome!
+
+Open an issue
+Submit a pull request
+
+</details>
+<details> <summary><strong>📄 License</strong></summary> <br>
+
+This project is licensed under the MIT License.
+
+</details>
+<details> <summary><strong>⭐ Support</strong></summary> <br>
+
+If you found WageWise useful, consider giving it a star ⭐ — it helps a lot!
+
+</details>
+<details> <summary><strong>🙌 Acknowledgements</strong></summary> <br>
+
+Inspired by the idea that:
+
+Time is the most valuable currency we have.
+
+</details> ```
