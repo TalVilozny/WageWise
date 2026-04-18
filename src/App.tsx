@@ -9,9 +9,6 @@ import {
 } from "./purchaseHistory";
 import type { SavingsDeadlinePreset, SavingsGoalStored } from "./savingsGoal";
 import {
-  computeDaysUntilDeadline,
-  computeGoalDelayDays,
-  formatGoalDelayPhrase,
   loadSavingsGoal,
   persistSavingsGoal,
   SAVINGS_DEADLINE_OPTIONS,
@@ -543,21 +540,21 @@ function App() {
     return productPrice;
   }, [priceExactDraft, productPrice, currency, maxPrice]);
 
-  const savingsGoalDelayPhrase = useMemo(() => {
+  /** Work-time cost of the price at current hourly — avoids broken calendar math for tiny goals. */
+  const savingsGoalCallout = useMemo(() => {
     if (!savingsGoal.enabled || savingsGoal.targetAmount <= 0) return null;
-    const daysLeft = computeDaysUntilDeadline(savingsGoal.deadline);
-    const d = computeGoalDelayDays(
-      priceForGoalHint,
-      savingsGoal.targetAmount,
-      daysLeft,
-    );
-    if (d == null) return null;
-    return formatGoalDelayPhrase(d);
+    if (priceForGoalHint <= 0 || hourly <= 0) return null;
+    const hoursCost = priceForGoalHint / hourly;
+    return {
+      workLabel: formatHours(hoursCost),
+      goalLabel: formatMoney(savingsGoal.targetAmount, currency),
+    };
   }, [
-    priceForGoalHint,
     savingsGoal.enabled,
     savingsGoal.targetAmount,
-    savingsGoal.deadline,
+    priceForGoalHint,
+    hourly,
+    currency,
   ]);
 
   const canBuy =
@@ -632,10 +629,7 @@ function App() {
       if (t === "") hourlyOk = false;
       else {
         const n = Number(t);
-        hourlyOk =
-          Number.isFinite(n) &&
-          n > 0 &&
-          clampHourly(n) > 0;
+        hourlyOk = Number.isFinite(n) && n > 0 && clampHourly(n) > 0;
       }
     } else {
       hourlyOk = hourly > 0;
@@ -767,7 +761,11 @@ function App() {
                 onBlur={() => {
                   if (savingsTargetDraft === null) return;
                   const t = savingsTargetDraft.trim();
-                  if (t === "" || !Number.isFinite(Number(t)) || Number(t) <= 0) {
+                  if (
+                    t === "" ||
+                    !Number.isFinite(Number(t)) ||
+                    Number(t) <= 0
+                  ) {
                     setSavingsGoal((s) => ({ ...s, targetAmount: 0 }));
                     setSavingsTargetDraft(null);
                     return;
@@ -1601,18 +1599,18 @@ function App() {
                             />
                           </div>
                         </div>
-                        {savingsGoal.enabled &&
-                          savingsGoal.targetAmount > 0 &&
-                          priceForGoalHint > 0 &&
-                          savingsGoalDelayPhrase != null && (
-                            <p
-                              className="savings-goal-delay-callout"
-                              role="status"
-                            >
-                              Buying this delays your goal by{" "}
-                              {savingsGoalDelayPhrase}.
-                            </p>
-                          )}
+                        {savingsGoalCallout != null && (
+                          <p
+                            className="savings-goal-delay-callout"
+                            role="status"
+                          >
+                            At your pay rate, this purchase is about{" "}
+                            <strong>{savingsGoalCallout.workLabel}</strong> -
+                            money that could go toward your{" "}
+                            <strong>{savingsGoalCallout.goalLabel}</strong>{" "}
+                            savings goal instead.
+                          </p>
+                        )}
                         <div className="step-nav">
                           {!hourlyConfigured ? (
                             <button
