@@ -110,4 +110,4 @@ Inspired by the idea that:
 
 Time is the most valuable currency we have.
 
-</details> ```
+</details>

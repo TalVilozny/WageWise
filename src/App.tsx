@@ -7,6 +7,8 @@ import {
   loadPurchaseHistory,
   updatePurchaseWorthIt,
 } from "./purchaseHistory";
+import { LogoMark } from "./LogoMark";
+import { SiteFooter } from "./SiteFooter";
 import "./App.css";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
@@ -689,7 +691,7 @@ function App() {
 
       <header className="top-nav">
         <div className="top-nav-brand">
-          <span className="logo-mark">◇</span>
+          <LogoMark />
           <span className="logo-type">WageWise</span>
         </div>
         <div className="top-nav-end">
@@ -1441,12 +1443,10 @@ function App() {
               }
             />
           </section>
-
-          <footer className="site-footer">
-            <p>For fun reflection — not financial advice.</p>
-          </footer>
         </>
       )}
+
+      <SiteFooter />
     </div>
   );
 }

@@ -95,7 +95,7 @@
 .top-nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .top-nav-end {
@@ -249,17 +249,27 @@
   height: 1.2rem;
 }
 
-.logo-mark {
-  font-size: 1.1rem;
-  color: var(--color-primary);
-  text-shadow: 0 0 18px var(--shadow-logo);
+.logo-icon {
+  width: 3rem;
+  height: 3rem;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* Dark theme (default): black artwork → white */
+  filter: brightness(0) invert(1);
+}
+
+html[data-theme="light"] .logo-icon {
+  filter: none;
 }
 
 .logo-type {
   font-family: "Montserrat", sans-serif;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 /* ——— Hero ——— */
@@ -2565,12 +2575,163 @@ html[data-theme="light"] .history-verdict--yes {
 }
 
 .site-footer {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
   text-align: center;
+  border-top: 1px solid var(--color-border);
 }
 
-.site-footer p {
+.site-footer-inner {
+  max-width: 28rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.site-footer-byline {
+  margin: 0;
+}
+
+.site-footer-name {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.site-footer-tagline {
   margin: 0;
   font-size: 0.82rem;
+  line-height: 1.45;
   color: var(--color-text-muted);
+}
+
+.site-footer-email {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.site-footer-email a {
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-footer-email a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.site-footer-dot {
+  opacity: 0.55;
+}
+
+.site-footer-link {
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-footer-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ——— Privacy policy page ——— */
+.privacy-page .privacy-top-nav {
+  margin-bottom: 0.5rem;
+}
+
+a.privacy-nav-brand {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.privacy-nav-brand:hover .logo-type {
+  color: var(--color-accent);
+}
+
+.privacy-main {
+  margin-top: 0.5rem;
+  padding: 1.35rem 1.25rem 1.5rem;
+  border-radius: 1.5rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.privacy-title {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 0 0 0.35rem;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.privacy-updated {
+  margin: 0 0 1.25rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.privacy-body {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+.privacy-body h2 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 1.35rem 0 0.5rem;
+  color: var(--color-text);
+}
+
+.privacy-body h2:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.privacy-body p {
+  margin: 0 0 0.85rem;
+  color: var(--color-text-soft);
+}
+
+.privacy-body a {
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.privacy-body a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.privacy-back-wrap {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.privacy-back {
+  font-weight: 800;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.privacy-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
