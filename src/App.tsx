@@ -497,6 +497,15 @@ function App() {
   const [payEditorOpen, setPayEditorOpen] = useState(false);
   const [purchaseHistory, setPurchaseHistory] = useState(loadPurchaseHistory);
 
+  /** Allow empty exact fields while typing; `null` means show committed slider value. */
+  const [hourlyExactDraft, setHourlyExactDraft] = useState<string | null>(
+    null,
+  );
+  const [priceExactDraft, setPriceExactDraft] = useState<string | null>(null);
+  const [maxHoursExactDraft, setMaxHoursExactDraft] = useState<string | null>(
+    null,
+  );
+
   const maxPrice = PRICE_MAX[currency];
   const priceStep = currency === "JPY" ? 100 : 1;
   const hMin = HOURLY_MIN[currency];
@@ -514,6 +523,83 @@ function App() {
   const clampHourly = (v: number) =>
     Math.min(hMax, Math.max(hMin, Math.round(v / hStep) * hStep));
 
+  const commitHourlyDraft = (): boolean => {
+    if (hourlyExactDraft === null) return hourly > 0;
+    const t = hourlyExactDraft.trim();
+    if (t === "") return false;
+    const n = Number(t);
+    if (!Number.isFinite(n) || n <= 0) return false;
+    const next = clampHourly(n);
+    if (next <= 0) return false;
+    setHourly(next);
+    setHourlyExactDraft(null);
+    setVerdictShown(false);
+    return true;
+  };
+
+  const commitPriceDraft = (): boolean => {
+    if (priceExactDraft === null) return productPrice > 0;
+    const t = priceExactDraft.trim();
+    if (t === "") return false;
+    const n = Number(t);
+    if (!Number.isFinite(n) || n <= 0) return false;
+    const next = clampPriceAmount(n, currency, maxPrice);
+    if (next <= 0) return false;
+    setProductPrice(next);
+    setPriceExactDraft(null);
+    setVerdictShown(false);
+    return true;
+  };
+
+  /** Returns committed max hours, or `null` if invalid. Flushes draft into state when needed. */
+  const commitMaxHoursDraft = (): number | null => {
+    if (maxHoursExactDraft === null) {
+      return maxHours > 0 ? maxHours : null;
+    }
+    const t = maxHoursExactDraft.trim();
+    if (t === "") return null;
+    const n = Number(t);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    const next = clampHoursLimit(n);
+    if (next <= 0) return null;
+    setMaxHours(next);
+    setMaxHoursExactDraft(null);
+    return next;
+  };
+
+  const step1CanNext = useMemo(() => {
+    if (hourlyExactDraft !== null) {
+      const t = hourlyExactDraft.trim();
+      if (t === "") return false;
+      const n = Number(t);
+      if (!Number.isFinite(n) || n <= 0) return false;
+      return clampHourly(n) > 0;
+    }
+    return hourly > 0;
+  }, [hourly, hourlyExactDraft, hMin, hMax, hStep]);
+
+  const step2CanNext = useMemo(() => {
+    if (priceExactDraft !== null) {
+      const t = priceExactDraft.trim();
+      if (t === "") return false;
+      const n = Number(t);
+      if (!Number.isFinite(n) || n <= 0) return false;
+      return clampPriceAmount(n, currency, maxPrice) > 0;
+    }
+    return productPrice > 0;
+  }, [priceExactDraft, productPrice, currency, maxPrice]);
+
+  const step3CanDecide = useMemo(() => {
+    if (maxHoursExactDraft !== null) {
+      const t = maxHoursExactDraft.trim();
+      if (t === "") return false;
+      const n = Number(t);
+      if (!Number.isFinite(n) || n <= 0) return false;
+      return clampHoursLimit(n) > 0;
+    }
+    return maxHours > 0;
+  }, [maxHoursExactDraft, maxHours]);
+
   const handleCurrencyChange = (code: CurrencyCode) => {
     const min = HOURLY_MIN[code];
     const max = HOURLY_MAX[code];
@@ -521,6 +607,8 @@ function App() {
     const nextMax = PRICE_MAX[code];
     setCurrency(code);
     setVerdictShown(false);
+    setHourlyExactDraft(null);
+    setPriceExactDraft(null);
     setHourly((h) => Math.min(max, Math.max(min, Math.round(h / st) * st)));
     setProductPrice((p) => clampPriceAmount(p, code, nextMax));
   };
@@ -547,6 +635,7 @@ function App() {
 
   const openPayEditor = () => {
     payRateSnapshotRef.current = { hourly, currency };
+    setHourlyExactDraft(null);
     setPayEditorOpen(true);
   };
 
@@ -561,10 +650,12 @@ function App() {
       setHourly(snap.hourly);
       setCurrency(snap.currency);
     }
+    setHourlyExactDraft(null);
     closePayEditor();
   };
 
   const savePayEditor = () => {
+    if (!commitHourlyDraft()) return;
     closePayEditor();
   };
 
@@ -648,23 +739,29 @@ function App() {
 
   const goBack = () => {
     setVerdictShown(false);
+    if (step === 3) setMaxHoursExactDraft(null);
+    if (step === 2) setPriceExactDraft(null);
     setStep((s) => Math.max(minWizardStep, s - 1));
   };
 
   const handleDecide = () => {
+    const resolvedMax = commitMaxHoursDraft();
+    if (resolvedMax === null) return;
     setVerdictShown(true);
-    if (hourly > 0 && hoursForPrice !== null) {
-      setPurchaseHistory(
-        appendPurchaseHistoryEntry({
-          currency,
-          price: productPrice,
-          hourly,
-          hoursCost: hoursForPrice,
-          allowedHours: maxHours,
-          verdictYes: canBuy,
-        }),
-      );
-    }
+    if (hourly <= 0) return;
+    const hfp = productPrice / hourly;
+    if (!Number.isFinite(hfp)) return;
+    const verdictYes = hfp <= resolvedMax;
+    setPurchaseHistory(
+      appendPurchaseHistoryEntry({
+        currency,
+        price: productPrice,
+        hourly,
+        hoursCost: hfp,
+        allowedHours: resolvedMax,
+        verdictYes,
+      }),
+    );
   };
 
   const startOver = () => {
@@ -757,6 +854,7 @@ function App() {
                       value={clampHourly(hourly)}
                       onChange={(e) => {
                         setHourly(Number(e.target.value));
+                        setHourlyExactDraft(null);
                         setVerdictShown(false);
                       }}
                       className="range-input range-mint"
@@ -775,14 +873,28 @@ function App() {
                         min={hMin}
                         max={hMax}
                         step={hStep}
-                        value={clampHourly(hourly)}
+                        value={
+                          hourlyExactDraft !== null
+                            ? hourlyExactDraft
+                            : String(clampHourly(hourly))
+                        }
                         onChange={(e) => {
-                          const raw = e.target.value;
-                          if (raw === "") return;
-                          const n = Number(e.target.value);
-                          if (!Number.isFinite(n)) return;
-                          setHourly(clampHourly(n));
+                          setHourlyExactDraft(e.target.value);
                           setVerdictShown(false);
+                        }}
+                        onBlur={() => {
+                          if (hourlyExactDraft === null) return;
+                          const t = hourlyExactDraft.trim();
+                          if (
+                            t === "" ||
+                            !Number.isFinite(Number(t)) ||
+                            Number(t) <= 0
+                          ) {
+                            setHourlyExactDraft(null);
+                            return;
+                          }
+                          setHourly(clampHourly(Number(t)));
+                          setHourlyExactDraft(null);
                         }}
                       />
                     </div>
@@ -798,6 +910,7 @@ function App() {
                     <button
                       type="button"
                       className="btn-next pay-rate-done"
+                      disabled={!step1CanNext}
                       onClick={savePayEditor}
                     >
                       Done
@@ -1116,6 +1229,7 @@ function App() {
                             value={clampHourly(hourly)}
                             onChange={(e) => {
                               setHourly(Number(e.target.value));
+                              setHourlyExactDraft(null);
                               setVerdictShown(false);
                             }}
                             className="range-input range-mint"
@@ -1134,14 +1248,28 @@ function App() {
                               min={hMin}
                               max={hMax}
                               step={hStep}
-                              value={clampHourly(hourly)}
+                              value={
+                                hourlyExactDraft !== null
+                                  ? hourlyExactDraft
+                                  : String(clampHourly(hourly))
+                              }
                               onChange={(e) => {
-                                const raw = e.target.value;
-                                if (raw === "") return;
-                                const n = Number(e.target.value);
-                                if (!Number.isFinite(n)) return;
-                                setHourly(clampHourly(n));
+                                setHourlyExactDraft(e.target.value);
                                 setVerdictShown(false);
+                              }}
+                              onBlur={() => {
+                                if (hourlyExactDraft === null) return;
+                                const t = hourlyExactDraft.trim();
+                                if (
+                                  t === "" ||
+                                  !Number.isFinite(Number(t)) ||
+                                  Number(t) <= 0
+                                ) {
+                                  setHourlyExactDraft(null);
+                                  return;
+                                }
+                                setHourly(clampHourly(Number(t)));
+                                setHourlyExactDraft(null);
                               }}
                             />
                           </div>
@@ -1151,7 +1279,9 @@ function App() {
                           <button
                             type="button"
                             className="btn-next"
+                            disabled={!step1CanNext}
                             onClick={() => {
+                              if (!commitHourlyDraft()) return;
                               setDirection(1);
                               commitHourlyConfigured();
                               goNext();
@@ -1216,6 +1346,7 @@ function App() {
                             value={Math.min(productPrice, maxPrice)}
                             onChange={(e) => {
                               setProductPrice(Number(e.target.value));
+                              setPriceExactDraft(null);
                               setVerdictShown(false);
                             }}
                             className="range-input range-coral"
@@ -1234,16 +1365,36 @@ function App() {
                               min={0}
                               max={maxPrice}
                               step={priceStep}
-                              value={Math.min(productPrice, maxPrice)}
+                              value={
+                                priceExactDraft !== null
+                                  ? priceExactDraft
+                                  : String(
+                                      Math.min(productPrice, maxPrice),
+                                    )
+                              }
                               onChange={(e) => {
-                                const raw = e.target.value;
-                                if (raw === "") return;
-                                const n = Number(e.target.value);
-                                if (!Number.isFinite(n)) return;
-                                setProductPrice(
-                                  clampPriceAmount(n, currency, maxPrice),
-                                );
+                                setPriceExactDraft(e.target.value);
                                 setVerdictShown(false);
+                              }}
+                              onBlur={() => {
+                                if (priceExactDraft === null) return;
+                                const t = priceExactDraft.trim();
+                                if (
+                                  t === "" ||
+                                  !Number.isFinite(Number(t)) ||
+                                  Number(t) <= 0
+                                ) {
+                                  setPriceExactDraft(null);
+                                  return;
+                                }
+                                setProductPrice(
+                                  clampPriceAmount(
+                                    Number(t),
+                                    currency,
+                                    maxPrice,
+                                  ),
+                                );
+                                setPriceExactDraft(null);
                               }}
                             />
                           </div>
@@ -1266,7 +1417,9 @@ function App() {
                           <button
                             type="button"
                             className="btn-next"
+                            disabled={!step2CanNext}
                             onClick={() => {
+                              if (!commitPriceDraft()) return;
                               setDirection(1);
                               goNext();
                             }}
@@ -1332,6 +1485,7 @@ function App() {
                             value={maxHours}
                             onChange={(e) => {
                               setMaxHours(Number(e.target.value));
+                              setMaxHoursExactDraft(null);
                               setVerdictShown(false);
                             }}
                             className="range-input range-sun"
@@ -1350,14 +1504,28 @@ function App() {
                               min={0.25}
                               max={120}
                               step={0.25}
-                              value={maxHours}
+                              value={
+                                maxHoursExactDraft !== null
+                                  ? maxHoursExactDraft
+                                  : String(maxHours)
+                              }
                               onChange={(e) => {
-                                const raw = e.target.value;
-                                if (raw === "") return;
-                                const n = Number(e.target.value);
-                                if (!Number.isFinite(n)) return;
-                                setMaxHours(clampHoursLimit(n));
+                                setMaxHoursExactDraft(e.target.value);
                                 setVerdictShown(false);
+                              }}
+                              onBlur={() => {
+                                if (maxHoursExactDraft === null) return;
+                                const t = maxHoursExactDraft.trim();
+                                if (
+                                  t === "" ||
+                                  !Number.isFinite(Number(t)) ||
+                                  Number(t) <= 0
+                                ) {
+                                  setMaxHoursExactDraft(null);
+                                  return;
+                                }
+                                setMaxHours(clampHoursLimit(Number(t)));
+                                setMaxHoursExactDraft(null);
                               }}
                             />
                           </div>
@@ -1379,6 +1547,7 @@ function App() {
                           <button
                             type="button"
                             className="cta"
+                            disabled={!step3CanDecide}
                             onClick={handleDecide}
                           >
                             Do I buy it?

@@ -1539,6 +1539,19 @@ html[data-theme="light"] .main-card.glass-panel {
   box-shadow: 0 0 0 3px rgba(var(--rgb-primary), 0.5);
 }
 
+.btn-next:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  filter: grayscale(0.35);
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-next:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .btn-back {
   color: var(--color-text);
   background: var(--color-surface-glass);
@@ -1580,6 +1593,19 @@ html[data-theme="light"] .main-card.glass-panel {
     background-position 0.45s ease,
     box-shadow 0.25s ease,
     filter 0.2s ease;
+}
+
+.cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  filter: grayscale(0.35);
+  box-shadow: 0 4px 14px rgba(var(--rgb-accent), 0.2);
+}
+
+.cta:disabled:hover {
+  background-position: 0 0;
+  filter: grayscale(0.35);
+  box-shadow: 0 4px 14px rgba(var(--rgb-accent), 0.2);
 }
 
 .cta:hover {
