@@ -722,14 +722,14 @@ export function VerdictReveal({
                             ? {
                                 boxShadow: [
                                   "0 12px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-                                  "0 8px 40px rgba(165,74,77,0.45), 0 0 48px rgba(142,37,40,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
+                                  "0 10px 36px rgba(0,0,0,0.38), 0 0 32px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.18)",
                                   "0 12px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
                                 ],
                               }
                             : {
                                 boxShadow: [
                                   "0 12px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-                                  "0 8px 36px rgba(120,113,108,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+                                  "0 10px 34px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.1)",
                                   "0 12px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
                                 ],
                               }

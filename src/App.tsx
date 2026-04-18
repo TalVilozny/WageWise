@@ -7,6 +7,15 @@ import {
   loadPurchaseHistory,
   updatePurchaseWorthIt,
 } from "./purchaseHistory";
+import type { SavingsDeadlinePreset, SavingsGoalStored } from "./savingsGoal";
+import {
+  computeDaysUntilDeadline,
+  computeGoalDelayDays,
+  formatGoalDelayPhrase,
+  loadSavingsGoal,
+  persistSavingsGoal,
+  SAVINGS_DEADLINE_OPTIONS,
+} from "./savingsGoal";
 import { LogoMark } from "./LogoMark";
 import { SiteFooter } from "./SiteFooter";
 import "./App.css";
@@ -173,7 +182,7 @@ function clampHoursLimit(v: number): number {
   return Math.min(120, Math.max(0.25, Math.round(v * 4) / 4));
 }
 
-const STEP_LABELS = ["Your pay", "The price", "Your rule"];
+const STEP_LABELS = ["Your pay", "The price", "Your Reveal"];
 
 const INTRO_TUTORIAL_STEPS = [
   {
@@ -497,10 +506,11 @@ function App() {
   const [payEditorOpen, setPayEditorOpen] = useState(false);
   const [purchaseHistory, setPurchaseHistory] = useState(loadPurchaseHistory);
 
+  const [savingsGoal, setSavingsGoal] =
+    useState<SavingsGoalStored>(loadSavingsGoal);
+
   /** Allow empty exact fields while typing; `null` means show committed slider value. */
-  const [hourlyExactDraft, setHourlyExactDraft] = useState<string | null>(
-    null,
-  );
+  const [hourlyExactDraft, setHourlyExactDraft] = useState<string | null>(null);
   const [priceExactDraft, setPriceExactDraft] = useState<string | null>(null);
   const [maxHoursExactDraft, setMaxHoursExactDraft] = useState<string | null>(
     null,
@@ -516,6 +526,35 @@ function App() {
     if (hourly <= 0) return null;
     return productPrice / hourly;
   }, [hourly, productPrice]);
+
+  /** Price used for savings-goal delay (matches slider or exact field). */
+  const priceForGoalHint = useMemo(() => {
+    if (priceExactDraft !== null) {
+      const t = priceExactDraft.trim();
+      if (t === "" || !Number.isFinite(Number(t))) return productPrice;
+      const n = Number(t);
+      if (n <= 0) return 0;
+      return clampPriceAmount(n, currency, maxPrice);
+    }
+    return productPrice;
+  }, [priceExactDraft, productPrice, currency, maxPrice]);
+
+  const savingsGoalDelayPhrase = useMemo(() => {
+    if (!savingsGoal.enabled || savingsGoal.targetAmount <= 0) return null;
+    const daysLeft = computeDaysUntilDeadline(savingsGoal.deadline);
+    const d = computeGoalDelayDays(
+      priceForGoalHint,
+      savingsGoal.targetAmount,
+      daysLeft,
+    );
+    if (d == null) return null;
+    return formatGoalDelayPhrase(d);
+  }, [
+    priceForGoalHint,
+    savingsGoal.enabled,
+    savingsGoal.targetAmount,
+    savingsGoal.deadline,
+  ]);
 
   const canBuy =
     hourly > 0 && hoursForPrice !== null && hoursForPrice <= maxHours;
@@ -609,6 +648,11 @@ function App() {
     setVerdictShown(false);
     setHourlyExactDraft(null);
     setPriceExactDraft(null);
+    setSavingsGoal({
+      enabled: false,
+      targetAmount: 0,
+      deadline: "end_of_year",
+    });
     setHourly((h) => Math.min(max, Math.max(min, Math.round(h / st) * st)));
     setProductPrice((p) => clampPriceAmount(p, code, nextMax));
   };
@@ -621,6 +665,93 @@ function App() {
       /* ignore */
     }
   }, [hourly, currency]);
+
+  useEffect(() => {
+    persistSavingsGoal(savingsGoal);
+  }, [savingsGoal]);
+
+  const renderSavingsGoalControls = (variant: "step" | "popover") => {
+    const sid = variant === "popover" ? "-popover" : "";
+    return (
+      <div
+        className={
+          variant === "popover"
+            ? "savings-goal-step1 savings-goal-step1--popover"
+            : "savings-goal-step1"
+        }
+      >
+        <label className="savings-goal-check-label">
+          <input
+            type="checkbox"
+            checked={savingsGoal.enabled}
+            onChange={(e) =>
+              setSavingsGoal((s) => ({
+                ...s,
+                enabled: e.target.checked,
+              }))
+            }
+          />
+          <span>Savings goal</span>
+        </label>
+        {savingsGoal.enabled && (
+          <div className="savings-goal-panel savings-goal-panel--step1">
+            <div className="savings-goal-field">
+              <label
+                className="savings-goal-label"
+                htmlFor={`savings-target${sid}`}
+              >
+                I want to save
+              </label>
+              <input
+                id={`savings-target${sid}`}
+                type="number"
+                className="savings-goal-input"
+                min={0}
+                step={currency === "JPY" ? 1000 : 50}
+                value={savingsGoal.targetAmount}
+                onChange={(e) => {
+                  const v = e.target.valueAsNumber;
+                  if (!Number.isFinite(v) || v < 0) return;
+                  setSavingsGoal((s) => ({
+                    ...s,
+                    targetAmount: v,
+                  }));
+                }}
+              />
+              <span className="savings-goal-formatted">
+                {formatMoney(savingsGoal.targetAmount, currency)}
+              </span>
+            </div>
+            <div className="savings-goal-field">
+              <label
+                className="savings-goal-label"
+                htmlFor={`savings-deadline${sid}`}
+              >
+                I plan to reach it by
+              </label>
+              <select
+                id={`savings-deadline${sid}`}
+                className="savings-goal-select"
+                value={savingsGoal.deadline}
+                onChange={(e) =>
+                  setSavingsGoal((s) => ({
+                    ...s,
+                    deadline: e.target.value as SavingsDeadlinePreset,
+                  }))
+                }
+              >
+                {SAVINGS_DEADLINE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const commitHourlyConfigured = () => {
     setHourlyConfigured(true);
@@ -899,6 +1030,7 @@ function App() {
                       />
                     </div>
                   </div>
+                  {renderSavingsGoalControls("popover")}
                   <div className="pay-rate-popover-actions">
                     <button
                       type="button"
@@ -1274,6 +1406,7 @@ function App() {
                             />
                           </div>
                         </div>
+                        {renderSavingsGoalControls("step")}
                         <div className="step-nav">
                           <span />
                           <button
@@ -1368,9 +1501,7 @@ function App() {
                               value={
                                 priceExactDraft !== null
                                   ? priceExactDraft
-                                  : String(
-                                      Math.min(productPrice, maxPrice),
-                                    )
+                                  : String(Math.min(productPrice, maxPrice))
                               }
                               onChange={(e) => {
                                 setPriceExactDraft(e.target.value);
@@ -1399,6 +1530,18 @@ function App() {
                             />
                           </div>
                         </div>
+                        {savingsGoal.enabled &&
+                          savingsGoal.targetAmount > 0 &&
+                          priceForGoalHint > 0 &&
+                          savingsGoalDelayPhrase != null && (
+                            <p
+                              className="savings-goal-delay-callout"
+                              role="status"
+                            >
+                              Buying this delays your goal by{" "}
+                              {savingsGoalDelayPhrase}.
+                            </p>
+                          )}
                         <div className="step-nav">
                           {!hourlyConfigured ? (
                             <button

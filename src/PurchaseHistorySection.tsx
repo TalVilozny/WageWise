@@ -5,6 +5,7 @@ import {
   REGRET_PROMPT_AFTER_MS,
   sumHoursCostThisMonth,
 } from "./purchaseHistory";
+import { SpendingPersonalitySection } from "./SpendingPersonalitySection";
 
 type Props = {
   entries: PurchaseHistoryEntry[];
@@ -330,6 +331,7 @@ export function PurchaseHistorySection({
         )}
       </section>
 
+      {sorted.length > 0 && <SpendingPersonalitySection entries={entries} />}
       {sorted.length > 0 && <RegretTrackerGraph entries={entries} />}
     </>
   );
