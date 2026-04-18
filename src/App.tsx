@@ -508,6 +508,10 @@ function App() {
 
   const [savingsGoal, setSavingsGoal] =
     useState<SavingsGoalStored>(loadSavingsGoal);
+  /** `null` = show committed `targetAmount`; string = user is typing (may be empty). */
+  const [savingsTargetDraft, setSavingsTargetDraft] = useState<string | null>(
+    null,
+  );
 
   /** Allow empty exact fields while typing; `null` means show committed slider value. */
   const [hourlyExactDraft, setHourlyExactDraft] = useState<string | null>(null);
@@ -606,16 +610,55 @@ function App() {
     return next;
   };
 
+  const commitSavingsTargetDraft = (): boolean => {
+    if (!savingsGoal.enabled) return true;
+    if (savingsTargetDraft === null) {
+      return savingsGoal.targetAmount > 0;
+    }
+    const t = savingsTargetDraft.trim();
+    if (t === "" || !Number.isFinite(Number(t)) || Number(t) <= 0) {
+      return false;
+    }
+    const n = Number(t);
+    setSavingsGoal((s) => ({ ...s, targetAmount: n }));
+    setSavingsTargetDraft(null);
+    return true;
+  };
+
   const step1CanNext = useMemo(() => {
+    let hourlyOk: boolean;
     if (hourlyExactDraft !== null) {
       const t = hourlyExactDraft.trim();
+      if (t === "") hourlyOk = false;
+      else {
+        const n = Number(t);
+        hourlyOk =
+          Number.isFinite(n) &&
+          n > 0 &&
+          clampHourly(n) > 0;
+      }
+    } else {
+      hourlyOk = hourly > 0;
+    }
+    if (!hourlyOk) return false;
+    if (!savingsGoal.enabled) return true;
+    if (savingsTargetDraft !== null) {
+      const t = savingsTargetDraft.trim();
       if (t === "") return false;
       const n = Number(t);
-      if (!Number.isFinite(n) || n <= 0) return false;
-      return clampHourly(n) > 0;
+      return Number.isFinite(n) && n > 0;
     }
-    return hourly > 0;
-  }, [hourly, hourlyExactDraft, hMin, hMax, hStep]);
+    return savingsGoal.targetAmount > 0;
+  }, [
+    hourly,
+    hourlyExactDraft,
+    hMin,
+    hMax,
+    hStep,
+    savingsGoal.enabled,
+    savingsGoal.targetAmount,
+    savingsTargetDraft,
+  ]);
 
   const step2CanNext = useMemo(() => {
     if (priceExactDraft !== null) {
@@ -648,6 +691,7 @@ function App() {
     setVerdictShown(false);
     setHourlyExactDraft(null);
     setPriceExactDraft(null);
+    setSavingsTargetDraft(null);
     setSavingsGoal({
       enabled: false,
       targetAmount: 0,
@@ -684,12 +728,14 @@ function App() {
           <input
             type="checkbox"
             checked={savingsGoal.enabled}
-            onChange={(e) =>
+            onChange={(e) => {
+              const on = e.target.checked;
+              if (!on) setSavingsTargetDraft(null);
               setSavingsGoal((s) => ({
                 ...s,
-                enabled: e.target.checked,
-              }))
-            }
+                enabled: on,
+              }));
+            }}
           />
           <span>Savings goal</span>
         </label>
@@ -708,18 +754,41 @@ function App() {
                 className="savings-goal-input"
                 min={0}
                 step={currency === "JPY" ? 1000 : 50}
-                value={savingsGoal.targetAmount}
+                value={
+                  savingsTargetDraft !== null
+                    ? savingsTargetDraft
+                    : savingsGoal.targetAmount === 0
+                      ? ""
+                      : String(savingsGoal.targetAmount)
+                }
                 onChange={(e) => {
-                  const v = e.target.valueAsNumber;
-                  if (!Number.isFinite(v) || v < 0) return;
+                  setSavingsTargetDraft(e.target.value);
+                }}
+                onBlur={() => {
+                  if (savingsTargetDraft === null) return;
+                  const t = savingsTargetDraft.trim();
+                  if (t === "" || !Number.isFinite(Number(t)) || Number(t) <= 0) {
+                    setSavingsGoal((s) => ({ ...s, targetAmount: 0 }));
+                    setSavingsTargetDraft(null);
+                    return;
+                  }
                   setSavingsGoal((s) => ({
                     ...s,
-                    targetAmount: v,
+                    targetAmount: Number(t),
                   }));
+                  setSavingsTargetDraft(null);
                 }}
               />
               <span className="savings-goal-formatted">
-                {formatMoney(savingsGoal.targetAmount, currency)}
+                {formatMoney(
+                  savingsTargetDraft !== null &&
+                    savingsTargetDraft.trim() !== "" &&
+                    Number.isFinite(Number(savingsTargetDraft.trim())) &&
+                    Number(savingsTargetDraft.trim()) > 0
+                    ? Number(savingsTargetDraft.trim())
+                    : savingsGoal.targetAmount,
+                  currency,
+                )}
               </span>
             </div>
             <div className="savings-goal-field">
@@ -787,6 +856,7 @@ function App() {
 
   const savePayEditor = () => {
     if (!commitHourlyDraft()) return;
+    if (!commitSavingsTargetDraft()) return;
     closePayEditor();
   };
 
@@ -1415,6 +1485,7 @@ function App() {
                             disabled={!step1CanNext}
                             onClick={() => {
                               if (!commitHourlyDraft()) return;
+                              if (!commitSavingsTargetDraft()) return;
                               setDirection(1);
                               commitHourlyConfigured();
                               goNext();
