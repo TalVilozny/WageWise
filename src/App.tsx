@@ -1,6 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { VerdictReveal } from "./VerdictReveal";
+import { PurchaseHistorySection } from "./PurchaseHistorySection";
+import {
+  appendPurchaseHistoryEntry,
+  loadPurchaseHistory,
+  updatePurchaseWorthIt,
+} from "./purchaseHistory";
 import "./App.css";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
@@ -487,6 +493,7 @@ function App() {
   const [introTutorialStep, setIntroTutorialStep] = useState(0);
   const [introHasReachedEnd, setIntroHasReachedEnd] = useState(false);
   const [payEditorOpen, setPayEditorOpen] = useState(false);
+  const [purchaseHistory, setPurchaseHistory] = useState(loadPurchaseHistory);
 
   const maxPrice = PRICE_MAX[currency];
   const priceStep = currency === "JPY" ? 100 : 1;
@@ -644,6 +651,18 @@ function App() {
 
   const handleDecide = () => {
     setVerdictShown(true);
+    if (hourly > 0 && hoursForPrice !== null) {
+      setPurchaseHistory(
+        appendPurchaseHistoryEntry({
+          currency,
+          price: productPrice,
+          hourly,
+          hoursCost: hoursForPrice,
+          allowedHours: maxHours,
+          verdictYes: canBuy,
+        }),
+      );
+    }
   };
 
   const startOver = () => {
@@ -1412,6 +1431,15 @@ function App() {
                 )}
               </motion.main>
             </div>
+
+            <PurchaseHistorySection
+              entries={purchaseHistory}
+              formatMoney={formatMoney}
+              formatHours={formatHours}
+              onRegretAnswer={(id, worthIt) =>
+                setPurchaseHistory(updatePurchaseWorthIt(id, worthIt))
+              }
+            />
           </section>
 
           <footer className="site-footer">

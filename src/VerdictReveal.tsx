@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { getHoursContextInsight } from "./hoursInsights";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
 
@@ -545,6 +546,10 @@ export function VerdictReveal({
 }: VerdictRevealProps) {
   const d = useRevealDelays(reduceMotion);
   const sunburstGradId = `vr-sun-${useId().replace(/:/g, "")}`;
+  const hoursContextInsight = useMemo(
+    () => getHoursContextInsight(hoursForPrice, productPrice),
+    [hoursForPrice, productPrice],
+  );
   /** Gift box + FX + vignette; headline, details, and Start over remain. */
   const [showRevealVisuals, setShowRevealVisuals] = useState(true);
 
@@ -834,6 +839,21 @@ export function VerdictReveal({
           That&apos;s about <strong>{formatHours(hoursForPrice)}</strong> at{" "}
           <strong>{formatMoney(hourly, currency)}/hr</strong>.
         </motion.p>
+        {hoursContextInsight != null && (
+          <motion.p
+            className="verdict-insight"
+            role="note"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: d.detailsDelay + (reduceMotion ? 0 : 0.14),
+              duration: reduceMotion ? d.detailsDuration : 0.38,
+              ease: easeOut,
+            }}
+          >
+            {hoursContextInsight}
+          </motion.p>
+        )}
         {canBuy ? (
           <motion.p
             className="verdict-line yes"
