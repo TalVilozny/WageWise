@@ -4,12 +4,25 @@ import {
   computeSpendingPersonality,
   SPENDING_PERSONALITY_MIN_ENTRIES,
 } from "./spendingPersonality";
-
 type Props = {
   entries: PurchaseHistoryEntry[];
+  expectedMonthlyWorkHours?: number | null;
+  workDaysPerWeek?: number;
+  workHoursPerDay?: number;
 };
 
-export function SpendingPersonalitySection({ entries }: Props) {
+function formatWorkdayHoursLabel(h: number): string {
+  if (!Number.isFinite(h) || h <= 0) return "8";
+  if (h % 1 === 0) return String(h);
+  return h.toFixed(1);
+}
+
+export function SpendingPersonalitySection({
+  entries,
+  expectedMonthlyWorkHours = null,
+  workDaysPerWeek = 5,
+  workHoursPerDay = 8,
+}: Props) {
   const profile = useMemo(
     () => computeSpendingPersonality(entries),
     [entries],
@@ -133,6 +146,17 @@ export function SpendingPersonalitySection({ entries }: Props) {
                 {v.headroomPct}%
               </span>
             </div>
+            {expectedMonthlyWorkHours != null &&
+              expectedMonthlyWorkHours > 0 &&
+              workDaysPerWeek > 0 && (
+                <p className="sp-personality-headroom-schedule">
+                  This month you&apos;re on track for about{" "}
+                  <strong>{expectedMonthlyWorkHours} hours</strong> of paid
+                  work ({workDaysPerWeek}{" "}
+                  {workDaysPerWeek === 1 ? "day" : "days"} per week,{" "}
+                  {formatWorkdayHoursLabel(workHoursPerDay)}-hour days).
+                </p>
+              )}
             <div
               className="sp-personality-headroom-track"
               role="progressbar"

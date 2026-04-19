@@ -117,7 +117,9 @@ export function PrivacyPolicy() {
           <p>
             The app may save settings and data in your browser using{" "}
             <strong>local storage</strong>, for example: theme preference,
-            currency and hourly rate choices, and a local history of verdicts
+            currency, hourly rate, days and hours per typical workweek, and a
+            local history of
+            verdicts
             you have run. This data stays on your device unless you clear site
             data in your browser.
           </p>

@@ -12,6 +12,9 @@ type Props = {
   formatMoney: (amount: number, currency: CurrencyCode) => string;
   formatHours: (h: number) => string;
   onRegretAnswer: (id: string, worthIt: boolean) => void;
+  expectedMonthlyWorkHours?: number | null;
+  workDaysPerWeek?: number;
+  workHoursPerDay?: number;
 };
 
 function IconPen({ className }: { className?: string }) {
@@ -135,6 +138,9 @@ export function PurchaseHistorySection({
   formatMoney,
   formatHours,
   onRegretAnswer,
+  expectedMonthlyWorkHours = null,
+  workDaysPerWeek = 5,
+  workHoursPerDay = 8,
 }: Props) {
   const [regretEditId, setRegretEditId] = useState<string | null>(null);
 
@@ -331,7 +337,14 @@ export function PurchaseHistorySection({
         )}
       </section>
 
-      {sorted.length > 0 && <SpendingPersonalitySection entries={entries} />}
+      {sorted.length > 0 && (
+        <SpendingPersonalitySection
+          entries={entries}
+          expectedMonthlyWorkHours={expectedMonthlyWorkHours}
+          workDaysPerWeek={workDaysPerWeek}
+          workHoursPerDay={workHoursPerDay}
+        />
+      )}
       {sorted.length > 0 && <RegretTrackerGraph entries={entries} />}
     </>
   );

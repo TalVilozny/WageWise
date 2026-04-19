@@ -1486,11 +1486,13 @@ html[data-theme="light"] .main-card.glass-panel {
 }
 
 .savings-goal-delay-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
   border-radius: 0.85rem;
   font-size: 0.92rem;
-  font-weight: 700;
   line-height: 1.45;
   text-align: center;
   color: var(--color-text);
@@ -1501,6 +1503,25 @@ html[data-theme="light"] .main-card.glass-panel {
   );
   border: 1px solid rgba(251, 113, 133, 0.35);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+}
+
+.savings-goal-delay-callout p {
+  margin: 0;
+}
+
+.savings-goal-delay-callout-earnings {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.savings-goal-delay-callout-main {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.savings-goal-delay-callout-main strong {
+  font-weight: 800;
 }
 
 .slider-block {
@@ -3080,6 +3101,18 @@ html[data-theme="light"]
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.sp-personality-headroom-schedule {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.sp-personality-headroom-schedule strong {
+  color: var(--color-text);
+  font-weight: 700;
 }
 
 .sp-personality-headroom-title {

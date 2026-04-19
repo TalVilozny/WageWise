@@ -15,6 +15,12 @@ import {
 } from "./savingsGoal";
 import { LogoMark } from "./LogoMark";
 import { SiteFooter } from "./SiteFooter";
+import {
+  clampDaysPerWeek,
+  clampHoursPerWorkday,
+  computeEarningsBreakdown,
+  computeExpectedWorkHoursThisMonth,
+} from "./workSchedule";
 import "./App.css";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
@@ -25,6 +31,8 @@ const THEME_STORAGE_KEY = "doibuy-theme";
 const HOURLY_STORAGE_KEY = "doibuy-hourly";
 const CURRENCY_STORAGE_KEY = "doibuy-currency";
 const HOURLY_CONFIGURED_KEY = "doibuy-hourly-configured";
+const DAYS_PER_WEEK_STORAGE_KEY = "doibuy-days-per-week";
+const HOURS_PER_WORKDAY_STORAGE_KEY = "doibuy-hours-per-workday";
 
 function readStoredTheme(): ThemeMode {
   try {
@@ -148,6 +156,36 @@ function readStoredHourlyNumber(currency: CurrencyCode): number | null {
   }
 }
 
+function readStoredDaysPerWeek(): number {
+  try {
+    const v = localStorage.getItem(DAYS_PER_WEEK_STORAGE_KEY);
+    if (v == null) return 5;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 5;
+    return clampDaysPerWeek(n);
+  } catch {
+    return 5;
+  }
+}
+
+function readStoredHoursPerWorkday(): number {
+  try {
+    const v = localStorage.getItem(HOURS_PER_WORKDAY_STORAGE_KEY);
+    if (v == null) return 8;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 8;
+    return clampHoursPerWorkday(n);
+  } catch {
+    return 8;
+  }
+}
+
+function formatHoursPerWorkdayPill(h: number): string {
+  const c = clampHoursPerWorkday(h);
+  if (c % 1 === 0) return `${c} hr${c === 1 ? "" : "s"}`;
+  return `${c.toFixed(1)} hrs`;
+}
+
 function formatMoney(amount: number, currency: CurrencyCode): string {
   const fraction = currency === "JPY" ? 0 : 2;
   return new Intl.NumberFormat(undefined, {
@@ -184,23 +222,23 @@ const STEP_LABELS = ["Your pay", "The price", "Your Reveal"];
 const INTRO_TUTORIAL_STEPS = [
   {
     id: "pay",
-    title: "First: set your hourly rate",
-    body: "Pick the currency you think in, then slide to what you actually earn per hour (take-home is fine). Every price in the app gets translated into “how long would I have to work for this?” — so this number is the anchor.",
+    title: "Your pay and schedule",
+    body: "Choose currency, hourly rate (take-home is fine), days per week, and typical hours per workday — that full schedule feeds expected monthly paid hours later. Optionally turn on Savings goal — set an amount and when you want to reach it — so later steps can frame buys in work time against that target. Reopen Edit in the header anytime to change pay, schedule, currency, or savings. Your schedule also shows up alongside Spending Personality down the page.",
   },
   {
     id: "tag",
-    title: "Next: enter the sticker price",
-    body: "Type or slide the real cost of the thing you’re eyeing — tag, cart total, whatever matches the decision you’re making. No shame, just a number so we can compare it to your time.",
+    title: "The sticker price",
+    body: "Slide or type the real cost (tag, cart total, whatever matches the decision). We convert it to hours at your rate so you see time, not just dollars. If Savings goal is on, you’ll get a callout that compares that work time to what you’re trying to save.",
   },
   {
     id: "time",
-    title: "Then: draw your line",
-    body: "Set the most hours you’d honestly trade for this purchase. That’s your rule, not anyone else’s. If the math says it costs more work than you’re willing to give, you’ll feel it in the verdict.",
+    title: "Your hour limit",
+    body: "Set the most hours of work you’d honestly trade for this purchase — your personal rule. If the math says the item costs more work time than that cap, the verdict reflects it.",
   },
   {
     id: "boom",
-    title: "Last: see the verdict",
-    body: "We divide price by your rate and stack it against your hour limit. If it fits your rule, you’ll get a clear yes — otherwise you’ll see why it doesn’t. Tip: under each slider you can type an exact value if dragging feels fiddly. When you’re ready, tap Start — or Skip to jump straight in.",
+    title: "The verdict — and what comes next",
+    body: "You get a clear yes or no from price ÷ rate vs. your limit, with a full reveal; type exact values under any slider if dragging annoys you. After that, the rest of the app opens up: Purchase history, optional “was it worth it?” follow-ups after yeses, Spending Personality (mix of yes/no, average hour margin, and more), life hours spent on purchases this month vs. expected paid hours from your schedule, plus light/dark mode in the corner. It all stays on this device. Tap Start when you’re ready, or Skip to jump in.",
   },
 ] as const;
 
@@ -209,7 +247,7 @@ const EXPLAINER = [
     id: "pay",
     num: "01",
     title: "Your pay",
-    blurb: "Slide your real hourly rate.",
+    blurb: "Rate, days & hours per week, optional savings.",
     accent: "primary",
     Icon: IconWallet,
   },
@@ -217,7 +255,7 @@ const EXPLAINER = [
     id: "tag",
     num: "02",
     title: "The price",
-    blurb: "Match the sticker shock.",
+    blurb: "Sticker cost → hours; savings hints if on.",
     accent: "accent",
     Icon: IconTag,
   },
@@ -225,7 +263,7 @@ const EXPLAINER = [
     id: "time",
     num: "03",
     title: "Your limit",
-    blurb: "How many hours feels fair?",
+    blurb: "Hours you’d trade — your rule.",
     accent: "deep",
     Icon: IconClock,
   },
@@ -233,7 +271,7 @@ const EXPLAINER = [
     id: "boom",
     num: "04",
     title: "The reveal",
-    blurb: "We crunch it — then surprise you.",
+    blurb: "Verdict, then history & patterns.",
     accent: "light",
     Icon: IconSpark,
   },
@@ -437,7 +475,7 @@ function VisualExplainer({
       variants={container}
       initial="hidden"
       animate="show"
-      aria-label="How it works: four animated steps"
+      aria-label={`How it works: ${EXPLAINER.length} animated steps`}
     >
       <div className="explainer-connector" aria-hidden="true">
         <span className="explainer-beam" />
@@ -479,6 +517,8 @@ function App() {
   const payRateSnapshotRef = useRef<{
     hourly: number;
     currency: CurrencyCode;
+    daysPerWeek: number;
+    hoursPerWorkday: number;
   } | null>(null);
 
   const [theme, setTheme] = useState<ThemeMode>(readStoredTheme);
@@ -492,6 +532,10 @@ function App() {
     const cur = readStoredCurrencyCode() ?? "USD";
     return readStoredHourlyNumber(cur) ?? 25;
   });
+  const [daysPerWeek, setDaysPerWeek] = useState(readStoredDaysPerWeek);
+  const [hoursPerWorkday, setHoursPerWorkday] = useState(
+    readStoredHoursPerWorkday,
+  );
   const [productPrice, setProductPrice] = useState(120);
   const [maxHours, setMaxHours] = useState(8);
   const [step, setStep] = useState(() => (readHourlyConfigured() ? 2 : 1));
@@ -540,14 +584,30 @@ function App() {
     return productPrice;
   }, [priceExactDraft, productPrice, currency, maxPrice]);
 
-  /** Work-time cost of the price at current hourly — avoids broken calendar math for tiny goals. */
+  /** Work-time cost of the price + schedule earnings + hours to fund full goal. */
   const savingsGoalCallout = useMemo(() => {
     if (!savingsGoal.enabled || savingsGoal.targetAmount <= 0) return null;
     if (priceForGoalHint <= 0 || hourly <= 0) return null;
+    const earnings = computeEarningsBreakdown(
+      hourly,
+      daysPerWeek,
+      hoursPerWorkday,
+    );
+    if (earnings == null) return null;
     const hoursCost = priceForGoalHint / hourly;
+    const hoursForFullGoal = savingsGoal.targetAmount / hourly;
+    const hpd = clampHoursPerWorkday(hoursPerWorkday);
     return {
       workLabel: formatHours(hoursCost),
       goalLabel: formatMoney(savingsGoal.targetAmount, currency),
+      goalWorkLabel: formatHours(hoursForFullGoal),
+      rateLabel: formatMoney(hourly, currency),
+      dailyLabel: formatMoney(earnings.dailyPay, currency),
+      weeklyLabel: formatMoney(earnings.weeklyPay, currency),
+      monthlyLabel: formatMoney(earnings.monthlyPay, currency),
+      yearlyLabel: formatMoney(earnings.yearlyPay, currency),
+      daysPerWeek,
+      hoursPerDayDisplay: hpd % 1 === 0 ? String(hpd) : hpd.toFixed(1),
     };
   }, [
     savingsGoal.enabled,
@@ -555,10 +615,22 @@ function App() {
     priceForGoalHint,
     hourly,
     currency,
+    daysPerWeek,
+    hoursPerWorkday,
   ]);
 
   const canBuy =
     hourly > 0 && hoursForPrice !== null && hoursForPrice <= maxHours;
+
+  const expectedMonthlyWorkHours = useMemo(
+    () =>
+      computeExpectedWorkHoursThisMonth(
+        daysPerWeek,
+        new Date(),
+        hoursPerWorkday,
+      ),
+    [daysPerWeek, hoursPerWorkday],
+  );
 
   const clampHourly = (v: number) =>
     Math.min(hMax, Math.max(hMin, Math.round(v / hStep) * hStep));
@@ -705,6 +777,25 @@ function App() {
   }, [hourly, currency]);
 
   useEffect(() => {
+    try {
+      localStorage.setItem(DAYS_PER_WEEK_STORAGE_KEY, String(daysPerWeek));
+    } catch {
+      /* ignore */
+    }
+  }, [daysPerWeek]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        HOURS_PER_WORKDAY_STORAGE_KEY,
+        String(hoursPerWorkday),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [hoursPerWorkday]);
+
+  useEffect(() => {
     persistSavingsGoal(savingsGoal);
   }, [savingsGoal]);
 
@@ -832,7 +923,12 @@ function App() {
   const minWizardStep = hourlyConfigured ? 2 : 1;
 
   const openPayEditor = () => {
-    payRateSnapshotRef.current = { hourly, currency };
+    payRateSnapshotRef.current = {
+      hourly,
+      currency,
+      daysPerWeek,
+      hoursPerWorkday,
+    };
     setHourlyExactDraft(null);
     setPayEditorOpen(true);
   };
@@ -847,6 +943,8 @@ function App() {
     if (snap) {
       setHourly(snap.hourly);
       setCurrency(snap.currency);
+      setDaysPerWeek(snap.daysPerWeek);
+      setHoursPerWorkday(snap.hoursPerWorkday);
     }
     setHourlyExactDraft(null);
     closePayEditor();
@@ -1098,6 +1196,64 @@ function App() {
                       />
                     </div>
                   </div>
+                  <div className="slider-block pay-rate-slider-block">
+                    <div className="slider-head">
+                      <label
+                        className="field-label"
+                        htmlFor="days-per-week-header"
+                      >
+                        Days per week
+                      </label>
+                      <span className="pill-value pill-mint">
+                        {daysPerWeek === 1
+                          ? "1 day"
+                          : `${daysPerWeek} days`}
+                      </span>
+                    </div>
+                    <input
+                      id="days-per-week-header"
+                      type="range"
+                      min={1}
+                      max={7}
+                      step={1}
+                      value={daysPerWeek}
+                      onChange={(e) => {
+                        setDaysPerWeek(
+                          clampDaysPerWeek(Number(e.target.value)),
+                        );
+                        setVerdictShown(false);
+                      }}
+                      className="range-input range-mint"
+                    />
+                  </div>
+                  <div className="slider-block pay-rate-slider-block">
+                    <div className="slider-head">
+                      <label
+                        className="field-label"
+                        htmlFor="hours-per-workday-header"
+                      >
+                        Hours per workday
+                      </label>
+                      <span className="pill-value pill-mint">
+                        {formatHoursPerWorkdayPill(hoursPerWorkday)}
+                      </span>
+                    </div>
+                    <input
+                      id="hours-per-workday-header"
+                      type="range"
+                      min={0.5}
+                      max={16}
+                      step={0.25}
+                      value={clampHoursPerWorkday(hoursPerWorkday)}
+                      onChange={(e) => {
+                        setHoursPerWorkday(
+                          clampHoursPerWorkday(Number(e.target.value)),
+                        );
+                        setVerdictShown(false);
+                      }}
+                      className="range-input range-mint"
+                    />
+                  </div>
                   {renderSavingsGoalControls("popover")}
                   <div className="pay-rate-popover-actions">
                     <button
@@ -1189,7 +1345,8 @@ function App() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.45, delay: 0.2 }}
                   >
-                    Three sliders. One verdict. Zero spoilers until the end.
+                    Pay, price, and your rule — optional savings goal, then a
+                    verdict. Your history and patterns build up over time.
                   </motion.p>
                 </div>
               </div>
@@ -1199,8 +1356,8 @@ function App() {
                 role="tablist"
                 aria-label="Tutorial steps"
               >
-                {["01", "02", "03", "04"].map((n, i) => (
-                  <div key={n} className="story-node-wrap">
+                {INTRO_TUTORIAL_STEPS.map((tabStep, i) => (
+                  <div key={tabStep.id} className="story-node-wrap">
                     <button
                       type="button"
                       role="tab"
@@ -1215,9 +1372,11 @@ function App() {
                         }
                       }}
                     >
-                      <span className="story-num">{n}</span>
+                      <span className="story-num">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                     </button>
-                    {i < 3 && (
+                    {i < INTRO_TUTORIAL_STEPS.length - 1 && (
                       <span className="story-line" aria-hidden="true" />
                     )}
                   </div>
@@ -1376,7 +1535,8 @@ function App() {
                         <p className="step-kicker">Step 1 of 3</p>
                         <h2 className="step-title">What do you make?</h2>
                         <p className="step-blurb">
-                          Pick a currency, then slide to your rough hourly pay.
+                          Pick a currency, your hourly pay, how many days a week
+                          you work, and how many hours a typical workday runs.
                         </p>
                         <div
                           className="currency-chips"
@@ -1473,6 +1633,92 @@ function App() {
                               }}
                             />
                           </div>
+                        </div>
+                        <div className="slider-block">
+                          <div className="slider-head">
+                            <label
+                              className="field-label"
+                              htmlFor="days-per-week"
+                            >
+                              Days per week
+                            </label>
+                            <motion.span
+                              className="pill-value pill-mint"
+                              key={daysPerWeek}
+                              initial={reduceMotion ? false : { scale: 0.94 }}
+                              animate={{ scale: 1 }}
+                              transition={
+                                reduceMotion
+                                  ? { duration: 0 }
+                                  : {
+                                      type: "spring",
+                                      stiffness: 400,
+                                      damping: 22,
+                                    }
+                              }
+                            >
+                              {daysPerWeek === 1
+                                ? "1 day"
+                                : `${daysPerWeek} days`}
+                            </motion.span>
+                          </div>
+                          <input
+                            id="days-per-week"
+                            type="range"
+                            min={1}
+                            max={7}
+                            step={1}
+                            value={daysPerWeek}
+                            onChange={(e) => {
+                              setDaysPerWeek(
+                                clampDaysPerWeek(Number(e.target.value)),
+                              );
+                              setVerdictShown(false);
+                            }}
+                            className="range-input range-mint"
+                          />
+                        </div>
+                        <div className="slider-block">
+                          <div className="slider-head">
+                            <label
+                              className="field-label"
+                              htmlFor="hours-per-workday"
+                            >
+                              Hours per workday
+                            </label>
+                            <motion.span
+                              className="pill-value pill-mint"
+                              key={hoursPerWorkday}
+                              initial={reduceMotion ? false : { scale: 0.94 }}
+                              animate={{ scale: 1 }}
+                              transition={
+                                reduceMotion
+                                  ? { duration: 0 }
+                                  : {
+                                      type: "spring",
+                                      stiffness: 400,
+                                      damping: 22,
+                                    }
+                              }
+                            >
+                              {formatHoursPerWorkdayPill(hoursPerWorkday)}
+                            </motion.span>
+                          </div>
+                          <input
+                            id="hours-per-workday"
+                            type="range"
+                            min={0.5}
+                            max={16}
+                            step={0.25}
+                            value={clampHoursPerWorkday(hoursPerWorkday)}
+                            onChange={(e) => {
+                              setHoursPerWorkday(
+                                clampHoursPerWorkday(Number(e.target.value)),
+                              );
+                              setVerdictShown(false);
+                            }}
+                            className="range-input range-mint"
+                          />
                         </div>
                         {renderSavingsGoalControls("step")}
                         <div className="step-nav">
@@ -1600,16 +1846,37 @@ function App() {
                           </div>
                         </div>
                         {savingsGoalCallout != null && (
-                          <p
+                          <div
                             className="savings-goal-delay-callout"
                             role="status"
                           >
-                            At your pay rate, this purchase is about{" "}
-                            <strong>{savingsGoalCallout.workLabel}</strong> -
-                            money that could go toward your{" "}
-                            <strong>{savingsGoalCallout.goalLabel}</strong>{" "}
-                            savings goal instead.
-                          </p>
+                            <p className="savings-goal-delay-callout-earnings">
+                              At {savingsGoalCallout.rateLabel}/hr (
+                              {savingsGoalCallout.daysPerWeek}{" "}
+                              {savingsGoalCallout.daysPerWeek === 1
+                                ? "day"
+                                : "days"}{" "}
+                              × {savingsGoalCallout.hoursPerDayDisplay} hr/day),
+                              pay implied by this schedule is about{" "}
+                              {savingsGoalCallout.dailyLabel} per day,{" "}
+                              {savingsGoalCallout.weeklyLabel} per week,{" "}
+                              {savingsGoalCallout.monthlyLabel} this calendar
+                              month, and {savingsGoalCallout.yearlyLabel} per year
+                              (before tax — whatever your hourly number represents).
+                            </p>
+                            <p className="savings-goal-delay-callout-main">
+                              This purchase is about{" "}
+                              <strong>{savingsGoalCallout.workLabel}</strong>.
+                              Saving your full{" "}
+                              <strong>{savingsGoalCallout.goalLabel}</strong> goal
+                              at that rate is about{" "}
+                              <strong>
+                                {savingsGoalCallout.goalWorkLabel}
+                              </strong>{" "}
+                              of work — money that could go toward that goal
+                              instead of this purchase.
+                            </p>
+                          </div>
                         )}
                         <div className="step-nav">
                           {!hourlyConfigured ? (
@@ -1819,6 +2086,9 @@ function App() {
               entries={purchaseHistory}
               formatMoney={formatMoney}
               formatHours={formatHours}
+              expectedMonthlyWorkHours={expectedMonthlyWorkHours}
+              workDaysPerWeek={daysPerWeek}
+              workHoursPerDay={hoursPerWorkday}
               onRegretAnswer={(id, worthIt) =>
                 setPurchaseHistory(updatePurchaseWorthIt(id, worthIt))
               }
