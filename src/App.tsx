@@ -22,6 +22,7 @@ import {
   computeExpectedWorkHoursThisMonth,
 } from "./workSchedule";
 import "./App.css";
+import { Analytics } from "@vercel/analytics/react";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
 
@@ -1205,9 +1206,7 @@ function App() {
                         Days per week
                       </label>
                       <span className="pill-value pill-mint">
-                        {daysPerWeek === 1
-                          ? "1 day"
-                          : `${daysPerWeek} days`}
+                        {daysPerWeek === 1 ? "1 day" : `${daysPerWeek} days`}
                       </span>
                     </div>
                     <input
@@ -1861,15 +1860,16 @@ function App() {
                               {savingsGoalCallout.dailyLabel} per day,{" "}
                               {savingsGoalCallout.weeklyLabel} per week,{" "}
                               {savingsGoalCallout.monthlyLabel} this calendar
-                              month, and {savingsGoalCallout.yearlyLabel} per year
-                              (before tax — whatever your hourly number represents).
+                              month, and {savingsGoalCallout.yearlyLabel} per
+                              year (before tax — whatever your hourly number
+                              represents).
                             </p>
                             <p className="savings-goal-delay-callout-main">
                               This purchase is about{" "}
                               <strong>{savingsGoalCallout.workLabel}</strong>.
                               Saving your full{" "}
-                              <strong>{savingsGoalCallout.goalLabel}</strong> goal
-                              at that rate is about{" "}
+                              <strong>{savingsGoalCallout.goalLabel}</strong>{" "}
+                              goal at that rate is about{" "}
                               <strong>
                                 {savingsGoalCallout.goalWorkLabel}
                               </strong>{" "}
@@ -2096,7 +2096,7 @@ function App() {
           </section>
         </>
       )}
-
+      <Analytics />
       <SiteFooter />
     </div>
   );

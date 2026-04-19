@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CurrencyCode, PurchaseHistoryEntry } from "./purchaseHistory";
 import {
   REGRET_GRAPH_MIN_ANSWERS,
@@ -56,14 +56,28 @@ function formatDecidedAt(ts: number): string {
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
-/** Copy for Yes verdicts still inside the follow-up waiting window. */
+/**
+ * Copy for Yes verdicts still inside the follow-up waiting window.
+ * Counts by 24h elapsed since the decision (not ceil of time left), so the
+ * label steps 3 → 2 → 1 across the wait window instead of sticking on “3 days”
+ * whenever more than 48h remain (ceil of msLeft/MS_DAY did that).
+ */
 function worthItFollowUpCountdown(decidedAt: number, now: number): string | null {
   const msLeft = decidedAt + REGRET_PROMPT_AFTER_MS - now;
   if (msLeft <= 0) return null;
   if (msLeft < MS_DAY) {
     return "In less than a day, we will ask you if the purchase was worth it.";
   }
-  const days = Math.ceil(msLeft / MS_DAY);
+  const elapsed = Math.max(0, now - decidedAt);
+  const totalWaitDays = Math.max(
+    1,
+    Math.ceil(REGRET_PROMPT_AFTER_MS / MS_DAY),
+  );
+  const dayIndex = Math.min(
+    totalWaitDays - 1,
+    Math.floor(elapsed / MS_DAY),
+  );
+  const days = totalWaitDays - dayIndex;
   const dayWord = days === 1 ? "day" : "days";
   return `In ${days} ${dayWord}, we will ask you if the purchase was worth it.`;
 }
@@ -143,6 +157,7 @@ export function PurchaseHistorySection({
   workHoursPerDay = 8,
 }: Props) {
   const [regretEditId, setRegretEditId] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const monthHours = useMemo(
     () => sumHoursCostThisMonth(entries),
@@ -154,7 +169,32 @@ export function PurchaseHistorySection({
     [entries],
   );
 
-  const now = Date.now();
+  useEffect(() => {
+    const waitingOnFollowUp = entries.some(
+      (e) =>
+        e.verdictYes &&
+        e.worthIt === null &&
+        Date.now() < e.decidedAt + REGRET_PROMPT_AFTER_MS,
+    );
+    if (!waitingOnFollowUp) return;
+
+    setNow(Date.now());
+    const id = window.setInterval(() => {
+      setNow(Date.now());
+    }, 60_000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        setNow(Date.now());
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [entries]);
 
   return (
     <>
