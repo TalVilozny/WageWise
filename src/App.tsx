@@ -21,6 +21,7 @@ import {
   computeEarningsBreakdown,
   computeExpectedWorkHoursThisMonth,
 } from "./workSchedule";
+import wageWiseTextLogo from "./Icons/WageWiseText.png";
 import "./App.css";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -1087,7 +1088,13 @@ function App() {
       <header className="top-nav">
         <div className="top-nav-brand">
           <LogoMark />
-          <span className="logo-type">WageWise</span>
+          <img
+            src={wageWiseTextLogo}
+            alt="WageWise"
+            className="logo-wordmark"
+            loading="eager"
+            decoding="async"
+          />
         </div>
         <div className="top-nav-end">
           {appUnlocked && hourlyConfigured && (

@@ -95,7 +95,7 @@
 .top-nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 5px;
 }
 
 .top-nav-end {
@@ -270,6 +270,21 @@ html[data-theme="light"] .logo-icon {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   opacity: 0.95;
+}
+
+.logo-wordmark {
+  margin-top: 4px;
+  width: 135px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* Dark theme (default): black artwork -> white */
+  filter: brightness(0) invert(1);
+}
+
+html[data-theme="light"] .logo-wordmark {
+  filter: none;
 }
 
 /* ——— Hero ——— */
