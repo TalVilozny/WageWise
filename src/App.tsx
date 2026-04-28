@@ -225,22 +225,22 @@ const INTRO_TUTORIAL_STEPS = [
   {
     id: "pay",
     title: "Your pay and schedule",
-    body: "Choose currency, hourly rate (take-home is fine), days per week, and typical hours per workday — that full schedule feeds expected monthly paid hours later. Optionally turn on Savings goal — set an amount and when you want to reach it — so later steps can frame buys in work time against that target. Reopen Edit in the header anytime to change pay, schedule, currency, or savings. Your schedule also shows up alongside Spending Personality down the page.",
+    body: "Set your currency, hourly pay, and usual work schedule. Want extra motivation? Turn on a savings goal. You can edit all of this anytime from the header.",
   },
   {
     id: "tag",
     title: "The sticker price",
-    body: "Slide or type the real cost (tag, cart total, whatever matches the decision). We convert it to hours at your rate so you see time, not just dollars. If Savings goal is on, you’ll get a callout that compares that work time to what you’re trying to save.",
+    body: "Enter the real price. We instantly convert it into work hours so the decision feels real, not just numeric.",
   },
   {
     id: "time",
     title: "Your hour limit",
-    body: "Set the most hours of work you’d honestly trade for this purchase — your personal rule. If the math says the item costs more work time than that cap, the verdict reflects it.",
+    body: "Choose your personal limit: the most work hours this purchase is worth to you.",
   },
   {
     id: "boom",
     title: "The verdict — and what comes next",
-    body: "You get a clear yes or no from price ÷ rate vs. your limit, with a full reveal; type exact values under any slider if dragging annoys you. After that, the rest of the app opens up: Purchase history, optional “was it worth it?” follow-ups after yeses, Spending Personality (mix of yes/no, average hour margin, and more), life hours spent on purchases this month vs. expected paid hours from your schedule, plus light/dark mode in the corner. It all stays on this device. Tap Start when you’re ready, or Skip to jump in.",
+    body: "Get a clear yes/no verdict based on your numbers. Then unlock history and spending insights to learn your patterns over time. Everything stays on your device.",
   },
 ] as const;
 
@@ -546,6 +546,7 @@ function App() {
   const [startReady, setStartReady] = useState(false);
   const [introTutorialStep, setIntroTutorialStep] = useState(0);
   const [introHasReachedEnd, setIntroHasReachedEnd] = useState(false);
+  const [isIntroNavSolid, setIsIntroNavSolid] = useState(false);
   const [payEditorOpen, setPayEditorOpen] = useState(false);
   const [purchaseHistory, setPurchaseHistory] = useState(loadPurchaseHistory);
 
@@ -960,6 +961,7 @@ function App() {
 
   const unlockApp = () => {
     setAppUnlocked(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useLayoutEffect(() => {
@@ -1004,10 +1006,7 @@ function App() {
 
   useEffect(() => {
     if (!appUnlocked) return;
-    wizardRef.current?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "start",
-    });
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   }, [appUnlocked, reduceMotion]);
 
   useEffect(() => {
@@ -1034,6 +1033,7 @@ function App() {
   const goNext = () => {
     setVerdictShown(false);
     setStep((s) => Math.min(3, s + 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goBack = () => {
@@ -1041,9 +1041,11 @@ function App() {
     if (step === 3) setMaxHoursExactDraft(null);
     if (step === 2) setPriceExactDraft(null);
     setStep((s) => Math.max(minWizardStep, s - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDecide = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     const resolvedMax = commitMaxHoursDraft();
     if (resolvedMax === null) return;
     setVerdictShown(true);
@@ -1066,6 +1068,13 @@ function App() {
   const startOver = () => {
     setVerdictShown(false);
     setStep(hourlyConfigured ? 2 : 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBrandClick = () => {
+    setVerdictShown(false);
+    setStep(hourlyConfigured ? 2 : 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const slideVariants = {
@@ -1085,8 +1094,15 @@ function App() {
       <div className="bg-glow bg-glow-1" aria-hidden="true" />
       <div className="bg-glow bg-glow-2" aria-hidden="true" />
 
-      <header className="top-nav">
-        <div className="top-nav-brand">
+      <header
+        className={`top-nav ${!appUnlocked && isIntroNavSolid ? "top-nav--intro-solid" : ""}`}
+      >
+        <button
+          type="button"
+          className="top-nav-brand top-nav-brand-btn"
+          onClick={handleBrandClick}
+          aria-label="Go to first step"
+        >
           <LogoMark />
           <img
             src={wageWiseTextLogo}
@@ -1095,7 +1111,7 @@ function App() {
             loading="eager"
             decoding="async"
           />
-        </div>
+        </button>
         <div className="top-nav-end">
           {appUnlocked && hourlyConfigured && (
             <div className="top-nav-pay" ref={payEditorRef}>
@@ -1308,6 +1324,9 @@ function App() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="intro-heading"
+          onScroll={(e) => {
+            setIsIntroNavSolid(e.currentTarget.scrollTop > 8);
+          }}
         >
           <div className="intro-shell-inner">
             <section
@@ -1351,8 +1370,8 @@ function App() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.45, delay: 0.2 }}
                   >
-                    Pay, price, and your rule — optional savings goal, then a
-                    verdict. Your history and patterns build up over time.
+                    Set your pay, enter a price, choose your limit, and get a
+                    clear verdict in seconds.
                   </motion.p>
                 </div>
               </div>
@@ -1431,26 +1450,27 @@ function App() {
                     type="button"
                     className="btn-back"
                     disabled={introTutorialStep === 0}
-                    onClick={() =>
-                      setIntroTutorialStep((s) => Math.max(0, s - 1))
-                    }
+                    onClick={() => {
+                      setIntroTutorialStep((s) => Math.max(0, s - 1));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                   >
                     Back
                   </button>
-                  <button
-                    type="button"
-                    className="btn-next"
-                    disabled={
-                      introTutorialStep >= INTRO_TUTORIAL_STEPS.length - 1
-                    }
-                    onClick={() =>
-                      setIntroTutorialStep((s) =>
-                        Math.min(INTRO_TUTORIAL_STEPS.length - 1, s + 1),
-                      )
-                    }
-                  >
-                    Next
-                  </button>
+                  {introTutorialStep < INTRO_TUTORIAL_STEPS.length - 1 && (
+                    <button
+                      type="button"
+                      className="btn-next"
+                      onClick={() => {
+                        setIntroTutorialStep((s) =>
+                          Math.min(INTRO_TUTORIAL_STEPS.length - 1, s + 1),
+                        );
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      Next
+                    </button>
+                  )}
                 </div>
               </div>
 
