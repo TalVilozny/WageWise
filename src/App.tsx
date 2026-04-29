@@ -1130,6 +1130,14 @@ function App() {
               >
                 Edit
               </button>
+              <button
+                type="button"
+                className={`pay-rate-backdrop ${payEditorOpen ? "is-open" : ""}`}
+                onClick={closePayEditor}
+                aria-label="Close hourly pay editor"
+                aria-hidden={!payEditorOpen}
+                tabIndex={payEditorOpen ? 0 : -1}
+              />
               {payEditorOpen && (
                 <div
                   id="pay-rate-editor"

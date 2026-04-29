@@ -187,19 +187,57 @@
   text-align: left;
 }
 
+.pay-rate-backdrop {
+  display: none;
+}
+
 @media (max-width: 640px) {
+  .pay-rate-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 180;
+    display: block;
+    border: none;
+    opacity: 0;
+    background: rgba(10, 6, 6, 0);
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    pointer-events: none;
+    cursor: pointer;
+    transition:
+      opacity 220ms ease,
+      background-color 220ms ease,
+      backdrop-filter 220ms ease,
+      -webkit-backdrop-filter 220ms ease;
+  }
+
+  .pay-rate-backdrop.is-open {
+    opacity: 1;
+    background: rgba(10, 6, 6, 0.28);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    pointer-events: auto;
+  }
+
   .pay-rate-popover {
     position: fixed;
     left: 50%;
     right: auto;
     top: max(5.25rem, calc(env(safe-area-inset-top, 0px) + 4.75rem));
     transform: translateX(-50%);
-    width: min(18rem, calc(100vw - 1.5rem));
+    width: min(22rem, calc(100vw - 1.25rem));
     max-height: min(
-      32rem,
+      38rem,
       calc(
         100dvh - env(safe-area-inset-top, 0px) -
           env(safe-area-inset-bottom, 0px) - 6rem
+      )
+    );
+    min-height: min(
+      24rem,
+      calc(
+        100dvh - env(safe-area-inset-top, 0px) -
+          env(safe-area-inset-bottom, 0px) - 7rem
       )
     );
     overflow-y: auto;
