@@ -1075,6 +1075,7 @@ function App() {
       state.prevOverscrollBehaviorY = document.body.style.overscrollBehaviorY;
       document.body.style.overflow = "hidden";
       document.body.style.overscrollBehaviorY = "none";
+      document.documentElement.style.overscrollBehaviorY = "none";
     };
 
     const unlockScrollForSliderTouch = () => {
@@ -1082,11 +1083,13 @@ function App() {
       if (!state.active) return;
       document.body.style.overflow = state.prevOverflow;
       document.body.style.overscrollBehaviorY = state.prevOverscrollBehaviorY;
+      document.documentElement.style.overscrollBehaviorY = "";
       state.active = false;
     };
 
     const isRangeInput = (target: EventTarget | null) =>
-      target instanceof Element && target.closest('input[type="range"]') != null;
+      target instanceof Element &&
+      target.closest('input[type="range"]') != null;
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
@@ -1101,6 +1104,10 @@ function App() {
 
     const onPointerEnd = () => unlockScrollForSliderTouch();
     const onTouchEnd = () => unlockScrollForSliderTouch();
+    const onTouchMove = (e: TouchEvent) => {
+      if (!sliderTouchLockRef.current.active) return;
+      e.preventDefault();
+    };
 
     document.addEventListener("pointerdown", onPointerDown, { passive: true });
     document.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -1108,6 +1115,7 @@ function App() {
     document.addEventListener("pointercancel", onPointerEnd, { passive: true });
     document.addEventListener("touchend", onTouchEnd, { passive: true });
     document.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
 
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
@@ -1116,6 +1124,7 @@ function App() {
       document.removeEventListener("pointercancel", onPointerEnd);
       document.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("touchcancel", onTouchEnd);
+      document.removeEventListener("touchmove", onTouchMove);
       unlockScrollForSliderTouch();
     };
   }, []);
@@ -2098,7 +2107,7 @@ function App() {
                         <div className="slider-block">
                           <div className="slider-head">
                             <label className="field-label" htmlFor="hours">
-                              I&apos;ll only buy if it&apos;s under
+                              I'll buy if it's under
                             </label>
                             <motion.span
                               className="pill-value pill-sun"

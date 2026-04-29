@@ -1641,7 +1641,6 @@ html[data-theme="light"] .main-card.glass-panel {
 
 .slider-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem 1rem;
@@ -1649,6 +1648,7 @@ html[data-theme="light"] .main-card.glass-panel {
 }
 
 .pill-value {
+  white-space: nowrap;
   display: inline-block;
   font-size: 0.9rem;
   font-weight: 800;
