@@ -520,6 +520,15 @@ function App() {
   const wizardRef = useRef<HTMLElement>(null);
   const payEditorRef = useRef<HTMLDivElement>(null);
   const accessibilityMenuRef = useRef<HTMLDivElement>(null);
+  const sliderTouchLockRef = useRef<{
+    active: boolean;
+    prevOverflow: string;
+    prevOverscrollBehaviorY: string;
+  }>({
+    active: false,
+    prevOverflow: "",
+    prevOverscrollBehaviorY: "",
+  });
   const payRateSnapshotRef = useRef<{
     hourly: number;
     currency: CurrencyCode;
@@ -1056,6 +1065,60 @@ function App() {
       document.removeEventListener("mousedown", onPointer);
     };
   }, [accessibilityOpen]);
+
+  useEffect(() => {
+    const lockScrollForSliderTouch = () => {
+      const state = sliderTouchLockRef.current;
+      if (state.active) return;
+      state.active = true;
+      state.prevOverflow = document.body.style.overflow;
+      state.prevOverscrollBehaviorY = document.body.style.overscrollBehaviorY;
+      document.body.style.overflow = "hidden";
+      document.body.style.overscrollBehaviorY = "none";
+    };
+
+    const unlockScrollForSliderTouch = () => {
+      const state = sliderTouchLockRef.current;
+      if (!state.active) return;
+      document.body.style.overflow = state.prevOverflow;
+      document.body.style.overscrollBehaviorY = state.prevOverscrollBehaviorY;
+      state.active = false;
+    };
+
+    const isRangeInput = (target: EventTarget | null) =>
+      target instanceof Element && target.closest('input[type="range"]') != null;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      if (!isRangeInput(e.target)) return;
+      lockScrollForSliderTouch();
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (!isRangeInput(e.target)) return;
+      lockScrollForSliderTouch();
+    };
+
+    const onPointerEnd = () => unlockScrollForSliderTouch();
+    const onTouchEnd = () => unlockScrollForSliderTouch();
+
+    document.addEventListener("pointerdown", onPointerDown, { passive: true });
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("pointerup", onPointerEnd, { passive: true });
+    document.addEventListener("pointercancel", onPointerEnd, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    document.addEventListener("touchcancel", onTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("pointerup", onPointerEnd);
+      document.removeEventListener("pointercancel", onPointerEnd);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchEnd);
+      unlockScrollForSliderTouch();
+    };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

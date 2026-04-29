@@ -3666,6 +3666,7 @@ html[data-theme="light"]
   background: transparent;
   appearance: none;
   -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .accessibility-slider:focus-visible {
@@ -3798,12 +3799,16 @@ html[data-theme="light"] .accessibility-toggle-row input[type="checkbox"] {
   background: rgba(var(--rgb-primary), 0.18);
 }
 
-html[data-theme="light"] .accessibility-toggle-row input[type="checkbox"]::before {
+html[data-theme="light"]
+  .accessibility-toggle-row
+  input[type="checkbox"]::before {
   background: #ffffff;
   border: 1px solid rgba(var(--rgb-primary), 0.35);
 }
 
-html[data-theme="light"] .accessibility-toggle-row input[type="checkbox"]:checked {
+html[data-theme="light"]
+  .accessibility-toggle-row
+  input[type="checkbox"]:checked {
   background: linear-gradient(
     135deg,
     rgba(var(--rgb-primary), 0.95),
