@@ -522,11 +522,11 @@ function App() {
   const accessibilityMenuRef = useRef<HTMLDivElement>(null);
   const sliderTouchLockRef = useRef<{
     active: boolean;
-    prevOverflow: string;
+    prevBodyOverscrollBehaviorY: string;
     prevOverscrollBehaviorY: string;
   }>({
     active: false,
-    prevOverflow: "",
+    prevBodyOverscrollBehaviorY: "",
     prevOverscrollBehaviorY: "",
   });
   const payRateSnapshotRef = useRef<{
@@ -1071,19 +1071,18 @@ function App() {
       const state = sliderTouchLockRef.current;
       if (state.active) return;
       state.active = true;
-      state.prevOverflow = document.body.style.overflow;
-      state.prevOverscrollBehaviorY = document.body.style.overscrollBehaviorY;
-      document.body.style.overflow = "hidden";
+      state.prevBodyOverscrollBehaviorY = document.body.style.overscrollBehaviorY;
       document.body.style.overscrollBehaviorY = "none";
+      state.prevOverscrollBehaviorY = document.documentElement.style.overscrollBehaviorY;
       document.documentElement.style.overscrollBehaviorY = "none";
     };
 
     const unlockScrollForSliderTouch = () => {
       const state = sliderTouchLockRef.current;
       if (!state.active) return;
-      document.body.style.overflow = state.prevOverflow;
-      document.body.style.overscrollBehaviorY = state.prevOverscrollBehaviorY;
-      document.documentElement.style.overscrollBehaviorY = "";
+      document.body.style.overscrollBehaviorY = state.prevBodyOverscrollBehaviorY;
+      document.documentElement.style.overscrollBehaviorY =
+        state.prevOverscrollBehaviorY;
       state.active = false;
     };
 
@@ -1091,40 +1090,21 @@ function App() {
       target instanceof Element &&
       target.closest('input[type="range"]') != null;
 
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType !== "touch") return;
-      if (!isRangeInput(e.target)) return;
-      lockScrollForSliderTouch();
-    };
-
     const onTouchStart = (e: TouchEvent) => {
       if (!isRangeInput(e.target)) return;
       lockScrollForSliderTouch();
     };
 
-    const onPointerEnd = () => unlockScrollForSliderTouch();
     const onTouchEnd = () => unlockScrollForSliderTouch();
-    const onTouchMove = (e: TouchEvent) => {
-      if (!sliderTouchLockRef.current.active) return;
-      e.preventDefault();
-    };
 
-    document.addEventListener("pointerdown", onPointerDown, { passive: true });
     document.addEventListener("touchstart", onTouchStart, { passive: true });
-    document.addEventListener("pointerup", onPointerEnd, { passive: true });
-    document.addEventListener("pointercancel", onPointerEnd, { passive: true });
     document.addEventListener("touchend", onTouchEnd, { passive: true });
     document.addEventListener("touchcancel", onTouchEnd, { passive: true });
-    document.addEventListener("touchmove", onTouchMove, { passive: false });
 
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("touchstart", onTouchStart);
-      document.removeEventListener("pointerup", onPointerEnd);
-      document.removeEventListener("pointercancel", onPointerEnd);
       document.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("touchcancel", onTouchEnd);
-      document.removeEventListener("touchmove", onTouchMove);
       unlockScrollForSliderTouch();
     };
   }, []);

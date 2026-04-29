@@ -1679,6 +1679,7 @@ html[data-theme="light"] .main-card.glass-panel {
   height: 14px;
   border-radius: 999px;
   appearance: none;
+  touch-action: pan-x;
   cursor: pointer;
   margin: 0.35rem 0 0;
 }
