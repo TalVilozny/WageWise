@@ -22,6 +22,8 @@ import {
   computeExpectedWorkHoursThisMonth,
 } from "./workSchedule";
 import wageWiseTextLogo from "./Icons/WageWiseText.png";
+import accessibilityIcon from "./Icons/AccessibilityIcon.svg";
+import closeIcon from "./Icons/Close.svg";
 import "./App.css";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -35,6 +37,7 @@ const CURRENCY_STORAGE_KEY = "doibuy-currency";
 const HOURLY_CONFIGURED_KEY = "doibuy-hourly-configured";
 const DAYS_PER_WEEK_STORAGE_KEY = "doibuy-days-per-week";
 const HOURS_PER_WORKDAY_STORAGE_KEY = "doibuy-hours-per-workday";
+const ROOT_BASE_FONT_SIZE_PX = 17;
 
 function readStoredTheme(): ThemeMode {
   try {
@@ -516,6 +519,7 @@ function App() {
   const reduceMotion = useReducedMotion();
   const wizardRef = useRef<HTMLElement>(null);
   const payEditorRef = useRef<HTMLDivElement>(null);
+  const accessibilityMenuRef = useRef<HTMLDivElement>(null);
   const payRateSnapshotRef = useRef<{
     hourly: number;
     currency: CurrencyCode;
@@ -547,6 +551,12 @@ function App() {
   const [introTutorialStep, setIntroTutorialStep] = useState(0);
   const [introHasReachedEnd, setIntroHasReachedEnd] = useState(false);
   const [isIntroNavSolid, setIsIntroNavSolid] = useState(false);
+  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
+  const [textScalePercent, setTextScalePercent] = useState(100);
+  const [highContrastEnabled, setHighContrastEnabled] = useState(false);
+  const [reducedMotionEnabled, setReducedMotionEnabled] = useState(false);
+  const [largerTargetsEnabled, setLargerTargetsEnabled] = useState(false);
+  const [readableSpacingEnabled, setReadableSpacingEnabled] = useState(false);
   const [payEditorOpen, setPayEditorOpen] = useState(false);
   const [purchaseHistory, setPurchaseHistory] = useState(loadPurchaseHistory);
 
@@ -1029,6 +1039,62 @@ function App() {
       document.removeEventListener("mousedown", onPointer);
     };
   }, [payEditorOpen]);
+
+  useEffect(() => {
+    if (!accessibilityOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccessibilityOpen(false);
+    };
+    const onPointer = (e: MouseEvent) => {
+      const el = accessibilityMenuRef.current;
+      if (!el?.contains(e.target as Node)) setAccessibilityOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [accessibilityOpen]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.fontSize = `${(ROOT_BASE_FONT_SIZE_PX * textScalePercent) / 100}px`;
+    root.style.setProperty(
+      "--accessibility-text-scale",
+      String(textScalePercent / 100),
+    );
+
+    if (highContrastEnabled) {
+      root.setAttribute("data-accessibility-contrast", "high");
+    } else {
+      root.removeAttribute("data-accessibility-contrast");
+    }
+
+    if (reducedMotionEnabled) {
+      root.setAttribute("data-accessibility-motion", "reduced");
+    } else {
+      root.removeAttribute("data-accessibility-motion");
+    }
+
+    if (largerTargetsEnabled) {
+      root.setAttribute("data-accessibility-targets", "large");
+    } else {
+      root.removeAttribute("data-accessibility-targets");
+    }
+
+    if (readableSpacingEnabled) {
+      root.setAttribute("data-accessibility-spacing", "comfy");
+    } else {
+      root.removeAttribute("data-accessibility-spacing");
+    }
+  }, [
+    textScalePercent,
+    highContrastEnabled,
+    reducedMotionEnabled,
+    largerTargetsEnabled,
+    readableSpacingEnabled,
+  ]);
 
   const goNext = () => {
     setVerdictShown(false);
@@ -2131,6 +2197,130 @@ function App() {
           </section>
         </>
       )}
+      <div className="accessibility-fab-wrap" ref={accessibilityMenuRef}>
+        {!accessibilityOpen && (
+          <button
+            type="button"
+            className={`accessibility-fab-btn ${accessibilityOpen ? "is-open" : ""}`}
+            onClick={() => setAccessibilityOpen((v) => !v)}
+            aria-expanded={accessibilityOpen}
+            aria-controls="accessibility-menu"
+            aria-label="Open accessibility menu"
+          >
+            <img
+              src={accessibilityIcon}
+              alt=""
+              aria-hidden="true"
+              className="accessibility-fab-icon"
+            />
+          </button>
+        )}
+        {accessibilityOpen && (
+          <section
+            id="accessibility-menu"
+            className="accessibility-menu"
+            role="dialog"
+            aria-label="Accessibility menu"
+          >
+            <button
+              type="button"
+              className="accessibility-menu-close"
+              onClick={() => setAccessibilityOpen(false)}
+              aria-label="Close accessibility menu"
+            >
+              <img src={closeIcon} alt="" aria-hidden="true" />
+            </button>
+            <p className="accessibility-menu-kicker">Accessibility</p>
+            <h3 className="accessibility-menu-title">Comfort controls</h3>
+            <p className="accessibility-menu-subtitle">
+              Tune zoom, contrast, motion, and touch comfort.
+            </p>
+            <div className="accessibility-toggle-row accessibility-slider-row">
+              <span className="accessibility-toggle-copy">
+                <span className="accessibility-toggle-title">Page Zoom</span>
+                <span className="accessibility-toggle-desc">
+                  Increase core elements size across the app.
+                </span>
+              </span>
+              <div className="accessibility-slider-wrap">
+                <span className="accessibility-slider-value">
+                  {textScalePercent}%
+                </span>
+                <input
+                  type="range"
+                  className="accessibility-slider"
+                  min={100}
+                  max={140}
+                  step={5}
+                  value={textScalePercent}
+                  onChange={(e) => setTextScalePercent(Number(e.target.value))}
+                  aria-label="Large text scale"
+                />
+              </div>
+            </div>
+            <label className="accessibility-toggle-row">
+              <span className="accessibility-toggle-copy">
+                <span className="accessibility-toggle-title">
+                  High contrast
+                </span>
+                <span className="accessibility-toggle-desc">
+                  Boost panel edges and text separation.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={highContrastEnabled}
+                onChange={(e) => setHighContrastEnabled(e.target.checked)}
+              />
+            </label>
+            <label className="accessibility-toggle-row">
+              <span className="accessibility-toggle-copy">
+                <span className="accessibility-toggle-title">
+                  Reduce motion
+                </span>
+                <span className="accessibility-toggle-desc">
+                  Soften animations and movement effects.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={reducedMotionEnabled}
+                onChange={(e) => setReducedMotionEnabled(e.target.checked)}
+              />
+            </label>
+            <label className="accessibility-toggle-row">
+              <span className="accessibility-toggle-copy">
+                <span className="accessibility-toggle-title">
+                  Larger touch targets
+                </span>
+                <span className="accessibility-toggle-desc">
+                  Increase control height for easier tapping.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={largerTargetsEnabled}
+                onChange={(e) => setLargerTargetsEnabled(e.target.checked)}
+              />
+            </label>
+            <label className="accessibility-toggle-row">
+              <span className="accessibility-toggle-copy">
+                <span className="accessibility-toggle-title">
+                  Readable spacing
+                </span>
+                <span className="accessibility-toggle-desc">
+                  Add extra line and letter spacing.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={readableSpacingEnabled}
+                onChange={(e) => setReadableSpacingEnabled(e.target.checked)}
+              />
+            </label>
+          </section>
+        )}
+      </div>
       <Analytics />
       <SiteFooter />
     </div>
