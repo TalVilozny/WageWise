@@ -219,7 +219,7 @@ function clampPriceAmount(
 }
 
 function clampHoursLimit(v: number): number {
-  return Math.min(120, Math.max(0.25, Math.round(v * 4) / 4));
+  return Math.min(120, Math.max(0.5, Math.round(v * 2) / 2));
 }
 
 const STEP_LABELS = ["Your pay", "The price", "Your Reveal"];
@@ -1031,6 +1031,10 @@ function App() {
   useEffect(() => {
     if (hourlyConfigured && step === 1) setStep(2);
   }, [hourlyConfigured, step]);
+
+  useLayoutEffect(() => {
+    setMaxHours((h) => clampHoursLimit(h));
+  }, []);
 
   useEffect(() => {
     if (!payEditorOpen) return;
@@ -2111,9 +2115,9 @@ function App() {
                           <input
                             id="hours"
                             type="range"
-                            min={0.25}
+                            min={0.5}
                             max={120}
-                            step={0.25}
+                            step={0.5}
                             value={maxHours}
                             onChange={(e) => {
                               setMaxHours(Number(e.target.value));
@@ -2133,9 +2137,9 @@ function App() {
                               id="hours-exact"
                               type="number"
                               className="slider-exact-input"
-                              min={0.25}
+                              min={0.5}
                               max={120}
-                              step={0.25}
+                              step={0.5}
                               value={
                                 maxHoursExactDraft !== null
                                   ? maxHoursExactDraft

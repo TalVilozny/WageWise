@@ -3963,6 +3963,10 @@ a.privacy-nav-brand:hover .logo-type {
   color: var(--color-accent);
 }
 
+a.privacy-nav-brand:hover .logo-wordmark {
+  opacity: 0.88;
+}
+
 .privacy-main {
   margin-top: 0.5rem;
   padding: 1.35rem 1.25rem 1.5rem;

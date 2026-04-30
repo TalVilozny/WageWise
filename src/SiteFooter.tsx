@@ -1,6 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export function SiteFooter() {
+  const location = useLocation();
+
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
@@ -18,7 +20,16 @@ export function SiteFooter() {
           <span className="site-footer-dot" aria-hidden="true">
             •
           </span>{" "}
-          <Link to="/privacy" className="site-footer-link">
+          <Link
+            to="/privacy"
+            className="site-footer-link"
+            onClick={(e) => {
+              if (location.pathname === "/privacy") {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
             Privacy Policy
           </Link>
         </p>

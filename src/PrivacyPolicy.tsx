@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { LogoMark } from "./LogoMark";
 import { SiteFooter } from "./SiteFooter";
+import wageWiseTextLogo from "./Icons/WageWiseText.png";
 import "./App.css";
 
 type ThemeMode = "light" | "dark";
@@ -68,6 +69,10 @@ export function PrivacyPolicy() {
     }
   }, [theme]);
 
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   return (
     <div className="page privacy-page">
       <div className="bg-mesh" aria-hidden="true" />
@@ -78,7 +83,13 @@ export function PrivacyPolicy() {
       <header className="top-nav privacy-top-nav">
         <Link to="/" className="top-nav-brand privacy-nav-brand">
           <LogoMark />
-          <span className="logo-type">WageWise</span>
+          <img
+            src={wageWiseTextLogo}
+            alt="WageWise"
+            className="logo-wordmark"
+            loading="eager"
+            decoding="async"
+          />
         </Link>
         <div className="top-nav-end">
           <button
