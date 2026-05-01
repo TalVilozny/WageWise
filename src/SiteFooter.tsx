@@ -15,6 +15,56 @@ export function SiteFooter() {
         <p className="site-footer-email">
           <a href="mailto:TalVilozny@gmail.com">TalVilozny@gmail.com</a>
         </p>
+        <p className="site-footer-nav">
+          <Link
+            to="/"
+            className="site-footer-link"
+            onClick={(e) => {
+              if (location.pathname === "/") {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
+            Home
+          </Link>
+          <span className="site-footer-dot" aria-hidden="true">
+            •
+          </span>
+          <Link
+            to="/purchase-history"
+            className="site-footer-link"
+            onClick={(e) => {
+              if (
+                location.pathname === "/purchase-history" ||
+                location.pathname === "/history"
+              ) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
+            Purchase history
+          </Link>
+          <span className="site-footer-dot" aria-hidden="true">
+            •
+          </span>
+          <Link
+            to="/spending-personality"
+            className="site-footer-link"
+            onClick={(e) => {
+              if (
+                location.pathname === "/spending-personality" ||
+                location.pathname === "/personality"
+              ) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
+            Spending personality
+          </Link>
+        </p>
         <p className="site-footer-meta">
           © 2026 Tal Vilozny. All rights reserved.{" "}
           <span className="site-footer-dot" aria-hidden="true">

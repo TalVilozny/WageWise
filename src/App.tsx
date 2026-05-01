@@ -26,6 +26,7 @@ import accessibilityIcon from "./Icons/AccessibilityIcon.svg";
 import closeIcon from "./Icons/Close.svg";
 import "./App.css";
 import { Analytics } from "@vercel/analytics/react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type CurrencyCode = "USD" | "EUR" | "ILS" | "GBP" | "JPY" | "CAD";
 
@@ -233,7 +234,7 @@ const INTRO_TUTORIAL_STEPS = [
   {
     id: "tag",
     title: "The sticker price",
-    body: "Enter the real price. We instantly convert it into work hours so the decision feels real, not just numeric.",
+    body: "Enter the price of an item, could be anything (e.g., coffee, book, phone furniture etc.) We instantly convert it into work hours so the decision feels real, not just numeric.",
   },
   {
     id: "time",
@@ -516,6 +517,18 @@ function VisualExplainer({
 }
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pageView = useMemo(() => {
+    const p = location.pathname;
+    if (p === "/purchase-history" || p === "/history") return "history" as const;
+    if (p === "/spending-personality" || p === "/personality") {
+      return "personality" as const;
+    }
+    return "home" as const;
+  }, [location.pathname]);
+  const isHomePath = pageView === "home";
+
   const reduceMotion = useReducedMotion();
   const wizardRef = useRef<HTMLElement>(null);
   const payEditorRef = useRef<HTMLDivElement>(null);
@@ -1036,6 +1049,10 @@ function App() {
     setMaxHours((h) => clampHoursLimit(h));
   }, []);
 
+  useLayoutEffect(() => {
+    if (!isHomePath) setAppUnlocked(true);
+  }, [isHomePath]);
+
   useEffect(() => {
     if (!payEditorOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -1075,16 +1092,19 @@ function App() {
       const state = sliderTouchLockRef.current;
       if (state.active) return;
       state.active = true;
-      state.prevBodyOverscrollBehaviorY = document.body.style.overscrollBehaviorY;
+      state.prevBodyOverscrollBehaviorY =
+        document.body.style.overscrollBehaviorY;
       document.body.style.overscrollBehaviorY = "none";
-      state.prevOverscrollBehaviorY = document.documentElement.style.overscrollBehaviorY;
+      state.prevOverscrollBehaviorY =
+        document.documentElement.style.overscrollBehaviorY;
       document.documentElement.style.overscrollBehaviorY = "none";
     };
 
     const unlockScrollForSliderTouch = () => {
       const state = sliderTouchLockRef.current;
       if (!state.active) return;
-      document.body.style.overscrollBehaviorY = state.prevBodyOverscrollBehaviorY;
+      document.body.style.overscrollBehaviorY =
+        state.prevBodyOverscrollBehaviorY;
       document.documentElement.style.overscrollBehaviorY =
         state.prevOverscrollBehaviorY;
       state.active = false;
@@ -1194,10 +1214,22 @@ function App() {
   };
 
   const handleBrandClick = () => {
+    navigate("/");
     setVerdictShown(false);
     setStep(hourlyConfigured ? 2 : 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const purchaseHistorySectionProps = {
+    entries: purchaseHistory,
+    formatMoney,
+    formatHours,
+    expectedMonthlyWorkHours,
+    workDaysPerWeek: daysPerWeek,
+    workHoursPerDay: hoursPerWorkday,
+    onRegretAnswer: (id: string, worthIt: boolean) =>
+      setPurchaseHistory(updatePurchaseWorthIt(id, worthIt)),
+  } as const;
 
   const slideVariants = {
     enter: (dir: number) =>
@@ -1448,7 +1480,7 @@ function App() {
         </div>
       </header>
 
-      {!appUnlocked && (
+      {!appUnlocked && isHomePath && (
         <div
           className="intro-shell"
           role="dialog"
@@ -1646,6 +1678,7 @@ function App() {
 
       {appUnlocked && (
         <>
+          {isHomePath && (
           <section id="wizard" className="wizard-section" ref={wizardRef}>
             <h2 className="wizard-heading">Your turn</h2>
             <div className="wizard-layout">
@@ -2238,19 +2271,18 @@ function App() {
                 )}
               </motion.main>
             </div>
-
-            <PurchaseHistorySection
-              entries={purchaseHistory}
-              formatMoney={formatMoney}
-              formatHours={formatHours}
-              expectedMonthlyWorkHours={expectedMonthlyWorkHours}
-              workDaysPerWeek={daysPerWeek}
-              workHoursPerDay={hoursPerWorkday}
-              onRegretAnswer={(id, worthIt) =>
-                setPurchaseHistory(updatePurchaseWorthIt(id, worthIt))
-              }
-            />
           </section>
+          )}
+          <PurchaseHistorySection
+            {...purchaseHistorySectionProps}
+            mode={
+              pageView === "history"
+                ? "history-only"
+                : pageView === "personality"
+                  ? "personality-only"
+                  : "full"
+            }
+          />
         </>
       )}
       <div className="accessibility-fab-wrap" ref={accessibilityMenuRef}>

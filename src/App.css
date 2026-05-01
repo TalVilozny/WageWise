@@ -2,10 +2,11 @@
 .page {
   position: relative;
   padding: 0 1rem 2.5rem;
-  max-width: 1080px;
+  max-width: min(1080px, 100%);
   margin: 0 auto;
   box-sizing: border-box;
   color: var(--color-text);
+  overflow-x: clip;
 }
 
 /* ——— Mesh + grid background (neo-futuristic) ——— */
@@ -85,12 +86,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   padding: 1.25rem 0 0.5rem;
   color: var(--color-text);
   font-weight: 700;
   letter-spacing: 0.04em;
   background: transparent;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   transition:
     background-color 260ms ease,
     box-shadow 260ms ease;
@@ -137,6 +142,9 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   display: flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
 }
 
 .top-nav-brand-btn {
@@ -147,6 +155,10 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   color: inherit;
   font: inherit;
   cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
 }
 
 .top-nav-brand-btn:focus-visible {
@@ -159,8 +171,11 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.35rem 0.5rem;
   flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
 }
 
 .top-nav-pay {
@@ -169,6 +184,9 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   align-items: center;
   gap: 0.25rem;
   flex-wrap: wrap;
+  min-width: 0;
+  justify-content: flex-end;
+  max-width: 100%;
 }
 
 .pay-rate-chip {
@@ -177,6 +195,10 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
   white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pay-rate-edit {
@@ -201,6 +223,13 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   outline: none;
   border-radius: 0.35rem;
   box-shadow: 0 0 0 2px rgba(var(--rgb-primary), 0.45);
+}
+
+@media (max-width: 640px) {
+  .top-nav .pay-rate-chip {
+    font-size: 0.74rem;
+    max-width: min(10.5rem, calc(100vw - 9rem));
+  }
 }
 
 .pay-rate-popover {
@@ -323,6 +352,7 @@ html[data-theme="light"] .top-nav--intro-solid::before {
   background: var(--color-surface-glass);
   color: var(--color-text);
   cursor: pointer;
+  flex-shrink: 0;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -369,13 +399,24 @@ html[data-theme="light"] .logo-icon {
 
 .logo-wordmark {
   margin-top: 4px;
-  width: calc(135px * var(--accessibility-text-scale, 1));
+  width: min(
+    calc(135px * var(--accessibility-text-scale, 1)),
+    100%
+  );
   height: auto;
   display: block;
   object-fit: contain;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
   /* Dark theme (default): black artwork -> white */
   filter: brightness(0) invert(1);
+}
+
+.top-nav .top-nav-brand .logo-icon,
+.privacy-top-nav .privacy-nav-brand .logo-icon {
+  width: min(3rem, 11vw);
+  height: min(3rem, 11vw);
+  flex-shrink: 0;
 }
 
 html[data-theme="light"] .logo-wordmark {
@@ -3925,6 +3966,18 @@ html[data-accessibility-spacing="comfy"] body {
 .site-footer-email a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.site-footer-nav {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
 }
 
 .site-footer-meta {

@@ -100,16 +100,24 @@ html[data-theme='light'] {
   --story-done-label: var(--color-text);
 }
 
+html {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
 #root {
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
   min-height: 100svh;
   box-sizing: border-box;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 h1,

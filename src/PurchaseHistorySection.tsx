@@ -5,7 +5,13 @@ import {
   REGRET_PROMPT_AFTER_MS,
   sumHoursCostThisMonth,
 } from "./purchaseHistory";
+import { SPENDING_PERSONALITY_MIN_ENTRIES } from "./spendingPersonality";
 import { SpendingPersonalitySection } from "./SpendingPersonalitySection";
+
+export type PurchaseHistorySectionMode =
+  | "full"
+  | "history-only"
+  | "personality-only";
 
 type Props = {
   entries: PurchaseHistoryEntry[];
@@ -15,6 +21,8 @@ type Props = {
   expectedMonthlyWorkHours?: number | null;
   workDaysPerWeek?: number;
   workHoursPerDay?: number;
+  /** Default `full`: timeline + personality + regret. Sub-routes use narrower layouts. */
+  mode?: PurchaseHistorySectionMode;
 };
 
 function IconPen({ className }: { className?: string }) {
@@ -155,6 +163,7 @@ export function PurchaseHistorySection({
   expectedMonthlyWorkHours = null,
   workDaysPerWeek = 5,
   workHoursPerDay = 8,
+  mode = "full",
 }: Props) {
   const [regretEditId, setRegretEditId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -196,6 +205,65 @@ export function PurchaseHistorySection({
     };
   }, [entries]);
 
+  const historyEmptyMessage =
+    mode === "history-only"
+      ? "No decisions yet — use Home to run the tool and log your first one."
+      : "No decisions yet — finish a verdict above to log your first one.";
+
+  if (mode === "personality-only") {
+    return (
+      <>
+        {entries.length === 0 ? (
+          <section
+            className="history-section glass-panel"
+            aria-labelledby="personality-page-empty-heading"
+          >
+            <h2
+              id="personality-page-empty-heading"
+              className="history-section-title"
+            >
+              Spending personality
+            </h2>
+            <p className="history-empty">
+              No decisions logged yet. On{" "}
+              <strong>Home</strong>, run a verdict to start building your
+              patterns.
+            </p>
+          </section>
+        ) : (
+          <>
+            <SpendingPersonalitySection
+              entries={entries}
+              expectedMonthlyWorkHours={expectedMonthlyWorkHours}
+              workDaysPerWeek={workDaysPerWeek}
+              workHoursPerDay={workHoursPerDay}
+            />
+            {entries.length > 0 &&
+              entries.length < SPENDING_PERSONALITY_MIN_ENTRIES && (
+                <section
+                  className="history-section glass-panel"
+                  aria-labelledby="personality-unlock-heading"
+                >
+                  <h2
+                    id="personality-unlock-heading"
+                    className="history-section-title"
+                  >
+                    Almost there
+                  </h2>
+                  <p className="history-section-lead">
+                    Spending Personality unlocks after{" "}
+                    {SPENDING_PERSONALITY_MIN_ENTRIES} logged decisions. You have{" "}
+                    {entries.length}.
+                  </p>
+                </section>
+              )}
+            <RegretTrackerGraph entries={entries} />
+          </>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <section
@@ -210,9 +278,7 @@ export function PurchaseHistorySection({
         </p>
 
         {sorted.length === 0 ? (
-          <p className="history-empty">
-            No decisions yet — finish a verdict above to log your first one.
-          </p>
+          <p className="history-empty">{historyEmptyMessage}</p>
         ) : (
           <>
             <ol className="history-timeline">
@@ -377,15 +443,17 @@ export function PurchaseHistorySection({
         )}
       </section>
 
-      {sorted.length > 0 && (
-        <SpendingPersonalitySection
-          entries={entries}
-          expectedMonthlyWorkHours={expectedMonthlyWorkHours}
-          workDaysPerWeek={workDaysPerWeek}
-          workHoursPerDay={workHoursPerDay}
-        />
+      {mode === "full" && sorted.length > 0 && (
+        <>
+          <SpendingPersonalitySection
+            entries={entries}
+            expectedMonthlyWorkHours={expectedMonthlyWorkHours}
+            workDaysPerWeek={workDaysPerWeek}
+            workHoursPerDay={workHoursPerDay}
+          />
+          <RegretTrackerGraph entries={entries} />
+        </>
       )}
-      {sorted.length > 0 && <RegretTrackerGraph entries={entries} />}
     </>
   );
 }
