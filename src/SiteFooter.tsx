@@ -36,8 +36,8 @@ export function SiteFooter() {
             className="site-footer-link"
             onClick={(e) => {
               if (
-                location.pathname === "/purchase-history" ||
-                location.pathname === "/history"
+                location.pathname === "/history" ||
+                location.pathname === "/purchase-history"
               ) {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -54,8 +54,8 @@ export function SiteFooter() {
             className="site-footer-link"
             onClick={(e) => {
               if (
-                location.pathname === "/spending-personality" ||
-                location.pathname === "/personality"
+                location.pathname === "/personality" ||
+                location.pathname === "spending-personality"
               ) {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: "smooth" });
