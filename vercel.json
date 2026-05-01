@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/pexels.js": {
+      "maxDuration": 30,
+      "includeFiles": "lib/**"
+    },
+    "api/groq.js": {
+      "maxDuration": 120,
+      "includeFiles": "lib/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
