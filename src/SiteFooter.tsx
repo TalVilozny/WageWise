@@ -1,8 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+
+function scrollFooterNavTop() {
+  const instant =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, left: 0, behavior: instant ? "instant" : "smooth" });
+}
 
 export function SiteFooter() {
-  const location = useLocation();
-
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
@@ -19,12 +24,7 @@ export function SiteFooter() {
           <Link
             to="/"
             className="site-footer-link"
-            onClick={(e) => {
-              if (location.pathname === "/") {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
+            onClick={() => scrollFooterNavTop()}
           >
             Home
           </Link>
@@ -32,17 +32,9 @@ export function SiteFooter() {
             •
           </span>
           <Link
-            to="/purchase-history"
+            to="/history"
             className="site-footer-link"
-            onClick={(e) => {
-              if (
-                location.pathname === "/history" ||
-                location.pathname === "/purchase-history"
-              ) {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
+            onClick={() => scrollFooterNavTop()}
           >
             Purchase history
           </Link>
@@ -50,17 +42,9 @@ export function SiteFooter() {
             •
           </span>
           <Link
-            to="/spending-personality"
+            to="/personality"
             className="site-footer-link"
-            onClick={(e) => {
-              if (
-                location.pathname === "/personality" ||
-                location.pathname === "spending-personality"
-              ) {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
+            onClick={() => scrollFooterNavTop()}
           >
             Spending personality
           </Link>
@@ -73,12 +57,7 @@ export function SiteFooter() {
           <Link
             to="/privacy"
             className="site-footer-link"
-            onClick={(e) => {
-              if (location.pathname === "/privacy") {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
+            onClick={() => scrollFooterNavTop()}
           >
             Privacy Policy
           </Link>

@@ -1053,6 +1053,14 @@ function App() {
     if (!isHomePath) setAppUnlocked(true);
   }, [isHomePath]);
 
+  useLayoutEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }, [location.pathname, reduceMotion]);
+
   useEffect(() => {
     if (!payEditorOpen) return;
     const onKey = (e: KeyboardEvent) => {
