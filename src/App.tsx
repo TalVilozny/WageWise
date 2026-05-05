@@ -493,9 +493,15 @@ function VisualExplainer({
             reduceMotion || row.id === activeExplainerId
               ? "explainer-card--focus"
               : "explainer-card--dim"
-          }`}
+          } ${row.id === activeExplainerId ? "explainer-card--active" : ""}`}
           variants={item}
-          style={{ zIndex: EXPLAINER.length - i }}
+          style={{
+            zIndex:
+              row.id === activeExplainerId
+                ? EXPLAINER.length + 2
+                : EXPLAINER.length - i,
+          }}
+          aria-current={row.id === activeExplainerId ? "step" : undefined}
         >
           {!reduceMotion && (
             <span
