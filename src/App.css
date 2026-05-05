@@ -2640,7 +2640,7 @@ html[data-theme="light"] .main-card.glass-panel {
 /* ——— Purchase history timeline ——— */
 .history-section {
   margin-top: 1.5rem;
-  padding: 1.35rem 1.25rem 1.45rem;
+
   border-radius: 1.5rem;
 }
 
@@ -3662,6 +3662,9 @@ html[data-theme="light"]
       )
     );
     box-sizing: border-box;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    animation-duration: 180ms;
   }
 }
 
@@ -3736,6 +3739,8 @@ html[data-theme="light"]
   animation: accessibility-menu-enter 220ms cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom right;
   position: relative;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 @keyframes accessibility-menu-enter {
